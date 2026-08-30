@@ -35,7 +35,7 @@ Prefer **lowest-common-denominator FP**: plain data, free functions, and many **
 - **imp-ts package ≡ Cargo crate** (one crate per npm package; no umbrella/facade crate).
 - Internal TypeScript modules become Rust modules inside that crate.
 - Extra focused crates are welcome; do not collapse packages.
-- **`imp_execution`** is deferred to a follow-up session (runtime performance design).
+- **`imp_execution`** — demand-driven graph interpreter; see crate module docs for performance tier notes.
 
 ## Friction rule
 
@@ -61,4 +61,4 @@ If an imp-ts pattern forces awkward Rust (shared mutable eval context, polymorph
 
 - Spec-first: [imp-spec](../imp-spec/docs/packages/) is authoritative; imp-ts is reference when the spec is silent.
 - Align public function names with imp-ts where sensible (`load_library`, `core_node_library`, …).
-- Execution API (`execute_graph`, `ExecutionHost`) belongs in the deferred `imp_execution` crate.
+- Execution API (`execute_graph`, `ExecutionHost`) lives in `imp_execution`.

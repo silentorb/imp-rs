@@ -10,8 +10,7 @@ Rust implementation of the Imp DAG transmission format. Language-neutral specs l
 | `imp_registry` | `imp-registry` |
 | `imp_collection_transforms` | `imp-collection-transforms` |
 | `imp_pathing` | `imp-pathing` |
-
-`imp_execution` is planned for a follow-up session.
+| `imp_execution` | `imp-execution` |
 
 ## Development
 

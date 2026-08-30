@@ -5,6 +5,7 @@ members = [
     "crates/imp_registry",
     "crates/imp_collection_transforms",
     "crates/imp_pathing",
+    "crates/imp_execution",
 ]
 
 [workspace.package]
@@ -17,6 +18,7 @@ imp_core_types = { path = "crates/imp_core_types" }
 imp_registry = { path = "crates/imp_registry" }
 imp_collection_transforms = { path = "crates/imp_collection_transforms" }
 imp_pathing = { path = "crates/imp_pathing" }
+imp_execution = { path = "crates/imp_execution" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

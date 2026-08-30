@@ -4,3 +4,6 @@ line_minimum = 70
 
 [crates.imp_registry]
 line_target = 90
+
+[crates.imp_execution]
+line_target = 72

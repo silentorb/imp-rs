@@ -1,0 +1,17 @@
+[package]
+name = "imp_execution"
+description = "Dynamic Imp graph execution runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+imp_core_types.workspace = true
+imp_registry.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+imp_collection_transforms.workspace = true
+imp_pathing.workspace = true
+imp_registry.workspace = true

@@ -10,8 +10,7 @@
 | `crates/imp_registry/` | `imp-registry` | Load `NodeLibrary` values and look up `NodeType`s |
 | `crates/imp_collection_transforms/` | `imp-collection-transforms` | Collection combinator `NodeLibrary` |
 | `crates/imp_pathing/` | `imp-pathing` | GQL-like path operator `NodeLibrary` |
-
-**Deferred:** `imp_execution` (`imp-execution`) — dynamic runtime; separate session.
+| `crates/imp_execution/` | `imp-execution` | Dynamic graph execution runtime |
 
 ## Specs vs code
 
@@ -39,7 +38,7 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | Registry | [registry](../imp-spec/docs/packages/imp-registry/registry.md) |
 | Collection transforms | [collection-transforms](../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) |
 | Pathing | [pathing](../imp-spec/docs/packages/imp-pathing/pathing.md) |
-| Dynamic execution | [execution](../imp-spec/docs/packages/imp-execution/execution.md) (deferred crate) |
+| Dynamic execution | [execution](../imp-spec/docs/packages/imp-execution/execution.md) |
 
 Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview/).
 
