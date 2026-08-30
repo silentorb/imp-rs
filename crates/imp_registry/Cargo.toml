@@ -1,0 +1,10 @@
+[package]
+name = "imp_registry"
+description = "Registry for loading Imp NodeLibrary catalogs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+imp_core_types.workspace = true
+thiserror.workspace = true

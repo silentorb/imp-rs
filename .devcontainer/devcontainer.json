@@ -1,0 +1,15 @@
+{
+  "name": "imp-rust",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "remoteUser": "root",
+  "postCreateCommand": "cargo fetch",
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer"]
+    }
+  }
+}

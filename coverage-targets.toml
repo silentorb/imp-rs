@@ -1,0 +1,6 @@
+[workspace]
+line_target = 85
+line_minimum = 70
+
+[crates.imp_registry]
+line_target = 90
