@@ -8,6 +8,8 @@ pub type TypeParamId = String;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TypeParam {
     pub id: TypeParamId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bounds: Vec<String>,
 }
 
 /// Imp signal type — concrete nominal type or type-variable reference.
@@ -22,6 +24,13 @@ pub enum SignalType {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         args: Vec<SignalType>,
     },
+}
+
+pub fn type_param(id: impl Into<String>) -> TypeParam {
+    TypeParam {
+        id: id.into(),
+        bounds: Vec::new(),
+    }
 }
 
 pub fn is_concrete(signal_type: &SignalType) -> bool {

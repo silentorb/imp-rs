@@ -11,7 +11,7 @@ pub type SignalTypeId = String;
 
 mod signal_type;
 pub use signal_type::{
-    collection_of, concrete_type, is_concrete, is_type_var, type_var, SignalType, TypeParam,
+    collection_of, concrete_type, is_concrete, is_type_var, type_param, type_var, SignalType, TypeParam,
     TypeParamId,
 };
 
@@ -78,6 +78,11 @@ pub use library::{NodeLibrary, NodeType};
 
 mod graph_type;
 pub use graph_type::{GraphType, GraphTypeId, GraphTypeLibrary};
+
+mod type_constraint;
+pub use type_constraint::{
+    TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
+};
 
 mod implementation;
 pub use implementation::{

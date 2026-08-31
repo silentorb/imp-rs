@@ -3,6 +3,7 @@
 use imp_core_types::{Graph, GraphType, GraphTypeId, Node, NodeId, NodeType, PortId, SignalType};
 use imp_registry::{get_graph_type, get_node_type, Registry};
 
+use crate::check_type_param_bounds::check_type_param_bounds;
 use crate::instantiate::instantiate_node_type;
 use crate::substitution::{
     apply_substitution, contains_type_var, scope_signal_type, Substitution, TypeCheckError,
@@ -199,6 +200,8 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
             }
         }
     }
+
+    errors.extend(check_type_param_bounds(graph, registry));
 
     errors
 }

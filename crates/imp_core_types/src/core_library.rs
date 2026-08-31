@@ -3,6 +3,7 @@
 use crate::{
     concrete_type, type_var, NodeLibrary, NodeType, Port, Ports, PrimitiveValue, SignalType,
     TypeParam,
+    type_param,
 };
 use std::collections::BTreeMap;
 
@@ -15,7 +16,7 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
 }
 
 fn type_param_t() -> Vec<TypeParam> {
-    vec![TypeParam { id: "T".into() }]
+    vec![type_param("T")]
 }
 
 /// Core Imp boundary nodes — one instance per external port.

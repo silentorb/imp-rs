@@ -1,6 +1,6 @@
 //! Core boundary `NodeLibrary` catalog tests.
 
-use imp_core_types::{core_node_library, PrimitiveValue, SignalType};
+use imp_core_types::{core_node_library, type_param, PrimitiveValue, SignalType};
 
 #[test]
 fn has_expected_boundary_types_and_port_templates() {
@@ -9,7 +9,7 @@ fn has_expected_boundary_types_and_port_templates() {
 
     let input = lib.types.get("input").unwrap();
     assert_eq!(input.id, "input");
-    assert_eq!(input.type_params, vec![imp_core_types::TypeParam { id: "T".into() }]);
+    assert_eq!(input.type_params, vec![type_param("T")]);
     assert!(input.inputs.is_empty());
     assert_eq!(input.outputs.get("value").unwrap().id, "value");
     assert_eq!(

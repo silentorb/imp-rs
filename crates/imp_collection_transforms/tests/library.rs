@@ -1,7 +1,7 @@
 //! Collection transforms catalog tests.
 
 use imp_collection_transforms::collection_transforms_library;
-use imp_core_types::{PrimitiveValue, SignalType};
+use imp_core_types::{type_param, PrimitiveValue, SignalType};
 use imp_registry::{create_registry, get_node_type, load_library};
 
 fn collection_t() -> SignalType {
@@ -18,7 +18,7 @@ fn has_expected_identity_and_transform_types() {
     assert_eq!(lib.types.get("filter").unwrap().id, "filter");
     assert_eq!(
         lib.types.get("filter").unwrap().type_params,
-        vec![imp_core_types::TypeParam { id: "T".into() }]
+        vec![type_param("T")]
     );
     assert_eq!(lib.types.get("except").unwrap().id, "except");
     assert_eq!(

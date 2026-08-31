@@ -1,8 +1,8 @@
 //! Pathing NodeLibrary. Spec: imp-spec/docs/packages/imp-pathing/pathing.md
 
 use imp_core_types::{
-    collection_of, concrete_type, type_var, NodeImplementation, NodeLibrary, NodeType, Port,
-    PrimitiveValue, SignalType, TypeParam,
+    collection_of, concrete_type, type_param, type_var, NodeImplementation, NodeLibrary, NodeType,
+    Port, PrimitiveValue, SignalType,
 };
 use std::collections::BTreeMap;
 
@@ -23,7 +23,7 @@ pub fn pathing_library() -> NodeLibrary {
 
     let traverse = NodeType {
         id: "traverse".into(),
-        type_params: vec![TypeParam { id: "T".into() }],
+        type_params: vec![type_param("T")],
         implementation: Some(NodeImplementation::universal("traverse")),
         inputs: BTreeMap::from([
             ("collection".into(), port("collection", collection_t.clone(), None)),

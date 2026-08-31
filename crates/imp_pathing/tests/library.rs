@@ -1,6 +1,6 @@
 //! Pathing catalog tests.
 
-use imp_core_types::{PrimitiveValue, SignalType};
+use imp_core_types::{type_param, PrimitiveValue, SignalType};
 use imp_pathing::pathing_library;
 use imp_registry::{create_registry, get_node_type, load_library};
 
@@ -18,7 +18,7 @@ fn has_expected_identity_and_traverse_type() {
 
     let traverse = lib.types.get("traverse").unwrap();
     assert_eq!(traverse.id, "traverse");
-    assert_eq!(traverse.type_params, vec![imp_core_types::TypeParam { id: "T".into() }]);
+    assert_eq!(traverse.type_params, vec![type_param("T")]);
     assert_eq!(
         traverse.inputs.get("collection").unwrap().signal_type,
         collection_t()

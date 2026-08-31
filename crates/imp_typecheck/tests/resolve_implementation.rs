@@ -16,7 +16,10 @@ fn cast_library() -> NodeLibrary {
             "cast".into(),
             NodeType {
                 id: "cast".into(),
-                type_params: vec![TypeParam { id: "T".into() }],
+                type_params: vec![TypeParam {
+                    id: "T".into(),
+                    bounds: vec![],
+                }],
                 implementation: Some(NodeImplementation::Dispatch {
                     param_index: None,
                     cases: vec![

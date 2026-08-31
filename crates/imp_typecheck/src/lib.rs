@@ -2,6 +2,7 @@
 //! Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
 mod check;
+mod check_type_param_bounds;
 mod graph_analysis;
 mod instantiate;
 mod resolve_implementation;
@@ -10,6 +11,7 @@ mod substitution;
 mod unify;
 
 pub use check::{check_graph, check_graph_implements};
+pub use check_type_param_bounds::check_type_param_bounds;
 pub use graph_analysis::resolve_port_type;
 pub use resolve_implementation::{
     effective_node_implementation, resolve_implementation, signal_type_matches,

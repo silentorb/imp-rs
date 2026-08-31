@@ -2,8 +2,8 @@
 //! Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md
 
 use imp_core_types::{
-    collection_of, concrete_type, type_var, NodeImplementation, NodeLibrary, NodeType, Port, Ports,
-    PrimitiveValue, SignalType, TypeParam,
+    collection_of, concrete_type, type_param, type_var, NodeImplementation, NodeLibrary, NodeType,
+    Port, Ports, PrimitiveValue, SignalType, TypeParam,
 };
 use std::collections::BTreeMap;
 
@@ -16,7 +16,7 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
 }
 
 fn type_param_t() -> Vec<TypeParam> {
-    vec![TypeParam { id: "T".into() }]
+    vec![type_param("T")]
 }
 
 fn collection_t() -> SignalType {
