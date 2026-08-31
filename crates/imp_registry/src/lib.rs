@@ -1,8 +1,8 @@
-//! Registry for loading NodeLibrary, GraphTypeLibrary, and TypeConstraintLibrary catalogs.
+//! Registry for loading NodeLibrary and GraphLibrary catalogs.
 //! Spec: imp-spec/docs/packages/imp-registry/registry.md
 
 use imp_core_types::{
-    GraphType, GraphTypeId, GraphTypeLibrary, NodeLibrary, NodeType, NodeTypeId,
+    is_graph_backed_definition, GraphLibrary, NodeDefinition, NodeLibrary, NodeTypeId,
     TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
 };
 use std::collections::BTreeMap;
@@ -11,23 +11,15 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Registry {
     pub libraries: Vec<NodeLibrary>,
-    pub graph_type_libraries: Vec<GraphTypeLibrary>,
+    pub graph_libraries: Vec<GraphLibrary>,
     pub type_constraint_libraries: Vec<TypeConstraintLibrary>,
-    pub types: BTreeMap<NodeTypeId, NodeType>,
-    pub graph_types: BTreeMap<GraphTypeId, GraphType>,
+    pub definitions: BTreeMap<NodeTypeId, NodeDefinition>,
     pub type_constraints: BTreeMap<TypeConstraintId, TypeConstraint>,
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
 #[error("NodeTypeId \"{type_id}\" is already registered (loading library \"{library_id}\")")]
 pub struct DuplicateNodeTypeError {
-    pub type_id: String,
-    pub library_id: String,
-}
-
-#[derive(Debug, Error, PartialEq, Eq)]
-#[error("GraphTypeId \"{type_id}\" is already registered (loading library \"{library_id}\")")]
-pub struct DuplicateGraphTypeError {
     pub type_id: String,
     pub library_id: String,
 }
@@ -41,73 +33,85 @@ pub struct DuplicateTypeConstraintError {
     pub library_id: String,
 }
 
+#[derive(Debug, Error, PartialEq, Eq)]
+pub struct InvalidGraphLibraryError {
+    pub definition_id: String,
+    pub library_id: String,
+    pub message: String,
+}
+
+impl std::fmt::Display for InvalidGraphLibraryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "GraphLibrary \"{}\" entry \"{}\": {}",
+            self.library_id, self.definition_id, self.message
+        )
+    }
+}
+
 pub fn create_registry() -> Registry {
     Registry {
         libraries: Vec::new(),
-        graph_type_libraries: Vec::new(),
+        graph_libraries: Vec::new(),
         type_constraint_libraries: Vec::new(),
-        types: BTreeMap::new(),
-        graph_types: BTreeMap::new(),
+        definitions: BTreeMap::new(),
         type_constraints: BTreeMap::new(),
     }
+}
+
+fn merge_definitions(
+    mut registry: Registry,
+    library_id: &str,
+    definitions: Vec<NodeDefinition>,
+) -> Result<Registry, DuplicateNodeTypeError> {
+    for definition in definitions {
+        if registry.definitions.contains_key(&definition.id) {
+            return Err(DuplicateNodeTypeError {
+                type_id: definition.id.clone(),
+                library_id: library_id.into(),
+            });
+        }
+        registry.definitions.insert(definition.id.clone(), definition);
+    }
+    Ok(registry)
+}
+
+pub fn load_node_library(
+    registry: Registry,
+    library: NodeLibrary,
+) -> Result<Registry, DuplicateNodeTypeError> {
+    let library_id = library.id.clone();
+    let definitions = library.definitions.clone();
+    let mut registry = merge_definitions(registry, &library_id, definitions)?;
+    registry.libraries.push(library);
+    Ok(registry)
 }
 
 pub fn load_library(
     registry: Registry,
     library: NodeLibrary,
 ) -> Result<Registry, DuplicateNodeTypeError> {
-    let mut types = registry.types.clone();
-
-    for (key, node_type) in &library.types {
-        if types.contains_key(key) {
-            return Err(DuplicateNodeTypeError {
-                type_id: key.clone(),
-                library_id: library.id.clone(),
-            });
-        }
-        types.insert(key.clone(), node_type.clone());
-    }
-
-    let mut libraries = registry.libraries.clone();
-    libraries.push(library);
-
-    Ok(Registry {
-        libraries,
-        graph_type_libraries: registry.graph_type_libraries,
-        type_constraint_libraries: registry.type_constraint_libraries,
-        types,
-        graph_types: registry.graph_types,
-        type_constraints: registry.type_constraints,
-    })
+    load_node_library(registry, library)
 }
 
-pub fn load_graph_type_library(
+pub fn load_graph_library(
     registry: Registry,
-    library: GraphTypeLibrary,
-) -> Result<Registry, DuplicateGraphTypeError> {
-    let mut graph_types = registry.graph_types.clone();
-
-    for (key, graph_type) in &library.types {
-        if graph_types.contains_key(key) {
-            return Err(DuplicateGraphTypeError {
-                type_id: key.clone(),
+    library: GraphLibrary,
+) -> Result<Registry, RegistryError> {
+    for definition in &library.definitions {
+        if !is_graph_backed_definition(definition) {
+            return Err(RegistryError::InvalidGraphLibrary(InvalidGraphLibraryError {
                 library_id: library.id.clone(),
-            });
+                definition_id: definition.id.clone(),
+                message: "must include body and bindings".into(),
+            }));
         }
-        graph_types.insert(key.clone(), graph_type.clone());
     }
-
-    let mut graph_type_libraries = registry.graph_type_libraries.clone();
-    graph_type_libraries.push(library);
-
-    Ok(Registry {
-        libraries: registry.libraries,
-        graph_type_libraries,
-        type_constraint_libraries: registry.type_constraint_libraries,
-        types: registry.types,
-        graph_types,
-        type_constraints: registry.type_constraints,
-    })
+    let mut registry = merge_definitions(registry, &library.id, library.definitions.clone())
+        .map_err(RegistryError::DuplicateNodeType)?;
+    registry.graph_libraries.push(library);
+    Ok(registry)
 }
 
 pub fn load_type_constraint_library(
@@ -131,20 +135,30 @@ pub fn load_type_constraint_library(
 
     Ok(Registry {
         libraries: registry.libraries,
-        graph_type_libraries: registry.graph_type_libraries,
+        graph_libraries: registry.graph_libraries,
         type_constraint_libraries,
-        types: registry.types,
-        graph_types: registry.graph_types,
+        definitions: registry.definitions,
         type_constraints,
     })
 }
 
-pub fn get_node_type<'a>(registry: &'a Registry, type_id: &str) -> Option<&'a NodeType> {
-    registry.types.get(type_id)
+#[derive(Debug, Error, PartialEq, Eq)]
+pub enum RegistryError {
+    #[error(transparent)]
+    DuplicateNodeType(#[from] DuplicateNodeTypeError),
+    #[error(transparent)]
+    InvalidGraphLibrary(#[from] InvalidGraphLibraryError),
 }
 
-pub fn get_graph_type<'a>(registry: &'a Registry, type_id: &str) -> Option<&'a GraphType> {
-    registry.graph_types.get(type_id)
+pub fn get_node_definition<'a>(
+    registry: &'a Registry,
+    type_id: &str,
+) -> Option<&'a NodeDefinition> {
+    registry.definitions.get(type_id)
+}
+
+pub fn get_node_type<'a>(registry: &'a Registry, type_id: &str) -> Option<&'a NodeDefinition> {
+    get_node_definition(registry, type_id)
 }
 
 pub fn get_type_constraint<'a>(
@@ -154,12 +168,12 @@ pub fn get_type_constraint<'a>(
     registry.type_constraints.get(constraint_id)
 }
 
-pub fn list_node_types(registry: &Registry) -> Vec<&NodeType> {
-    registry.types.values().collect()
+pub fn list_node_definitions(registry: &Registry) -> Vec<&NodeDefinition> {
+    registry.definitions.values().collect()
 }
 
-pub fn list_graph_types(registry: &Registry) -> Vec<&GraphType> {
-    registry.graph_types.values().collect()
+pub fn list_node_types(registry: &Registry) -> Vec<&NodeDefinition> {
+    list_node_definitions(registry)
 }
 
 pub fn list_type_constraints(registry: &Registry) -> Vec<&TypeConstraint> {
@@ -170,10 +184,17 @@ pub fn list_libraries(registry: &Registry) -> &[NodeLibrary] {
     &registry.libraries
 }
 
-pub fn list_graph_type_libraries(registry: &Registry) -> &[GraphTypeLibrary] {
-    &registry.graph_type_libraries
+pub fn list_graph_libraries(registry: &Registry) -> &[GraphLibrary] {
+    &registry.graph_libraries
 }
 
 pub fn list_type_constraint_libraries(registry: &Registry) -> &[TypeConstraintLibrary] {
     &registry.type_constraint_libraries
+}
+
+pub fn has_graph_backed_definitions(registry: &Registry) -> bool {
+    registry
+        .definitions
+        .values()
+        .any(is_graph_backed_definition)
 }

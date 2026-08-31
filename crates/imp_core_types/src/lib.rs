@@ -35,7 +35,7 @@ pub struct Port {
     pub default_value: Option<PrimitiveValue>,
 }
 
-/// Container of port templates — used for NodeType inputs/outputs.
+/// Container of port templates — used for NodeDefinition inputs/outputs.
 pub type Ports = BTreeMap<PortId, Port>;
 
 /// Local literal values on a node instance, keyed by input PortId.
@@ -74,10 +74,9 @@ pub struct Graph {
 }
 
 mod library;
-pub use library::{NodeLibrary, NodeType};
-
-mod graph_type;
-pub use graph_type::{GraphType, GraphTypeId, GraphTypeLibrary};
+pub use library::{
+    is_graph_backed_definition, BoundaryBindings, GraphLibrary, NodeDefinition, NodeLibrary, NodeType,
+};
 
 mod type_constraint;
 pub use type_constraint::{

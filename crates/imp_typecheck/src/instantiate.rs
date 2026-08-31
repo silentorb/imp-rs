@@ -1,6 +1,6 @@
-//! NodeType instantiation.
+//! NodeDefinition instantiation.
 
-use imp_core_types::{NodeType, Port, Ports, SignalType};
+use imp_core_types::{Graph, NodeDefinition, Port, Ports, SignalType};
 
 use crate::substitution::assert_concrete_args;
 
@@ -49,30 +49,60 @@ fn substitute_ports(
     Ok(result)
 }
 
+fn substitute_in_graph(graph: &Graph, params: &[String], args: &[SignalType]) -> Result<Graph, String> {
+    let mut nodes = graph.nodes.clone();
+    for node in nodes.values_mut() {
+        if !node.type_args.is_empty() {
+            node.type_args = node
+                .type_args
+                .iter()
+                .map(|type_arg| substitute_in_type(type_arg, params, args))
+                .collect::<Result<Vec<_>, _>>()?;
+        }
+    }
+    Ok(Graph {
+        nodes,
+        edges: graph.edges.clone(),
+    })
+}
+
 pub fn instantiate_node_type(
-    node_type: &NodeType,
+    definition: &NodeDefinition,
     type_args: &[SignalType],
-) -> Result<NodeType, String> {
-    let params: Vec<String> = node_type
+) -> Result<NodeDefinition, String> {
+    instantiate_node_definition(definition, type_args)
+}
+
+pub fn instantiate_node_definition(
+    definition: &NodeDefinition,
+    type_args: &[SignalType],
+) -> Result<NodeDefinition, String> {
+    let params: Vec<String> = definition
         .type_params
         .iter()
         .map(|param| param.id.clone())
         .collect();
     if params.len() != type_args.len() {
         return Err(format!(
-            "expected {} typeArgs for NodeType \"{}\", got {}",
+            "expected {} typeArgs for NodeDefinition \"{}\", got {}",
             params.len(),
-            node_type.id,
+            definition.id,
             type_args.len()
         ));
     }
     assert_concrete_args(type_args)?;
 
-    Ok(NodeType {
-        implementation: None,
-        id: node_type.id.clone(),
+    Ok(NodeDefinition {
+        id: definition.id.clone(),
+        name: definition.name.clone(),
         type_params: vec![],
-        inputs: substitute_ports(&node_type.inputs, &params, type_args)?,
-        outputs: substitute_ports(&node_type.outputs, &params, type_args)?,
+        implementation: definition.implementation.clone(),
+        inputs: substitute_ports(&definition.inputs, &params, type_args)?,
+        outputs: substitute_ports(&definition.outputs, &params, type_args)?,
+        body: match &definition.body {
+            Some(body) => Some(substitute_in_graph(body, &params, type_args)?),
+            None => None,
+        },
+        bindings: definition.bindings.clone(),
     })
 }

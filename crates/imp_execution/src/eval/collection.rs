@@ -6,10 +6,19 @@ use crate::host::{ExecutionHost, ExecutionRow};
 use crate::resolve::{
     require_node, resolve_input, EdgeTargetKey, ResolvedInput,
 };
-use imp_core_types::{Graph, NodeId, PortId, PrimitiveValue};
-use imp_registry::Registry;
+use imp_core_types::{BoundaryBindings, Graph, NodeId, PortId, PrimitiveValue};
+use imp_graph_resolve::{is_graph_backed_node_type, subgraph_key, ExecutionProgram};
+use imp_registry::{get_node_definition, Registry};
+use crate::resolve::index_edges_by_target;
 use serde_json::Value as JsonValue;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+pub struct CompositeFrame<'a> {
+    pub instance_id: NodeId,
+    pub bindings: BoundaryBindings,
+    pub parent_graph: &'a Graph,
+    pub parent_edges: &'a BTreeMap<EdgeTargetKey, imp_core_types::Edge>,
+}
 
 pub struct EvalContext<'a, H: ExecutionHost> {
     pub graph: &'a Graph,
@@ -17,6 +26,8 @@ pub struct EvalContext<'a, H: ExecutionHost> {
     pub host: &'a H,
     pub edges_by_target: &'a BTreeMap<EdgeTargetKey, imp_core_types::Edge>,
     pub source_node_id: NodeId,
+    pub execution_program: Option<&'a ExecutionProgram>,
+    pub composite: Option<CompositeFrame<'a>>,
 }
 
 fn require_number(value: &JsonValue, label: &str) -> Result<f64, ExecutionError> {
@@ -379,6 +390,108 @@ fn eval_predicate<H: ExecutionHost>(
     Ok(json_to_bool(&value))
 }
 
+fn input_port_for_bound_node(bindings: &BoundaryBindings, node_id: &NodeId) -> Option<PortId> {
+    bindings
+        .inputs
+        .iter()
+        .find_map(|(port_id, bound_id)| (bound_id == node_id).then(|| port_id.clone()))
+}
+
+fn eval_composite_collection_port<H: ExecutionHost>(
+    ctx: &EvalContext<'_, H>,
+    visiting: &mut BTreeSet<NodeId>,
+    instance_id: &NodeId,
+    output_port: &PortId,
+) -> Result<Vec<ExecutionRow>, ExecutionError> {
+    let program = ctx
+        .execution_program
+        .ok_or_else(|| ExecutionError::message(format!(
+            "Composite node \"{instance_id}\" requires an execution program"
+        )))?;
+
+    let instance = require_node(ctx.graph, instance_id)?;
+    let definition = get_node_definition(ctx.registry, &instance.node_type).ok_or_else(|| {
+        ExecutionError::message(format!("Node \"{instance_id}\" is not a graph-backed definition"))
+    })?;
+    let bindings = definition.bindings.as_ref().ok_or_else(|| {
+        ExecutionError::message(format!("Node \"{instance_id}\" is not a graph-backed definition"))
+    })?;
+
+    let key = subgraph_key(&definition.id, Some(&instance.type_args));
+    let body = program.subgraphs.get(&key).ok_or_else(|| {
+        ExecutionError::message(format!(
+            "Missing shared subgraph for definition \"{}\"",
+            definition.id
+        ))
+    })?;
+
+    let boundary_out = bindings.outputs.get(output_port).ok_or_else(|| {
+        ExecutionError::message(format!(
+            "Composite \"{instance_id}\" has no output binding for port \"{output_port}\""
+        ))
+    })?;
+
+    let inner_edges = index_edges_by_target(body)?;
+    let inner_ctx = EvalContext {
+        graph: body,
+        registry: ctx.registry,
+        host: ctx.host,
+        edges_by_target: &inner_edges,
+        source_node_id: ctx.source_node_id.clone(),
+        execution_program: ctx.execution_program,
+        composite: Some(CompositeFrame {
+            instance_id: instance_id.clone(),
+            bindings: bindings.clone(),
+            parent_graph: ctx.graph,
+            parent_edges: ctx.edges_by_target,
+        }),
+    };
+
+    eval_collection_port(&inner_ctx, visiting, boundary_out, &"value".into(), None)
+}
+
+fn follow_collection_port_on_parent<H: ExecutionHost>(
+    ctx: &EvalContext<'_, H>,
+    visiting: &mut BTreeSet<NodeId>,
+    instance_id: &NodeId,
+    port_id: &PortId,
+    current_row: Option<&ExecutionRow>,
+) -> Result<Vec<ExecutionRow>, ExecutionError> {
+    let frame = ctx.composite.as_ref().ok_or_else(|| {
+        ExecutionError::message("composite input requires parent frame".to_string())
+    })?;
+    let resolved = resolve_input(
+        frame.parent_graph,
+        ctx.registry,
+        frame.parent_edges,
+        instance_id,
+        port_id,
+    )?;
+    match resolved {
+        ResolvedInput::Literal { .. } => Err(ExecutionError::message(format!(
+            "composite.{port_id} on \"{instance_id}\" must be wired, not a literal"
+        ))),
+        ResolvedInput::Wire { from } => {
+            let parent_ctx = EvalContext {
+                graph: frame.parent_graph,
+                registry: ctx.registry,
+                host: ctx.host,
+                edges_by_target: frame.parent_edges,
+                source_node_id: ctx.source_node_id.clone(),
+                execution_program: ctx.execution_program,
+                composite: None,
+            };
+            eval_collection_port(
+                &parent_ctx,
+                visiting,
+                &from.node,
+                &from.port,
+                current_row,
+            )
+        }
+    }
+}
+
 fn follow_collection_port<H: ExecutionHost>(
     ctx: &EvalContext<'_, H>,
     visiting: &mut BTreeSet<NodeId>,
@@ -467,6 +580,17 @@ fn eval_collection_port_inner<H: ExecutionHost>(
     let node = require_node(ctx.graph, node_id)?;
     match node.node_type.as_str() {
         "input" => {
+            if let Some(frame) = &ctx.composite {
+                if let Some(input_port) = input_port_for_bound_node(&frame.bindings, node_id) {
+                    return follow_collection_port_on_parent(
+                        ctx,
+                        visiting,
+                        &frame.instance_id,
+                        &input_port,
+                        None,
+                    );
+                }
+            }
             if node_id != &ctx.source_node_id {
                 return Err(ExecutionError::message(format!(
                     "Unexpected input node \"{node_id}\""
@@ -701,6 +825,9 @@ fn eval_collection_port_inner<H: ExecutionHost>(
                 }
             }
             Ok(out)
+        }
+        other if is_graph_backed_node_type(other, ctx.registry) => {
+            eval_composite_collection_port(ctx, visiting, node_id, output_port)
         }
         other => Err(ExecutionError::message(format!(
             "Unsupported collection node type \"{other}\""

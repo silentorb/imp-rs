@@ -14,6 +14,7 @@ mod resolve;
 
 pub use error::ExecutionError;
 pub use execute::{execute_graph, ExecuteGraphOptions};
+pub use imp_graph_resolve::ExecutionProgram;
 pub use host::{
     ExecutionCapabilities, ExecutionHost, ExecutionResult, ExecutionRow,
     DEFAULT_EXECUTION_CAPABILITIES,

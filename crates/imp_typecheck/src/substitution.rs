@@ -9,7 +9,50 @@ pub type Substitution = BTreeMap<TypeParamId, SignalType>;
 pub struct TypeCheckError {
     pub node_id: Option<String>,
     pub port_id: Option<String>,
+    pub definition_id: Option<String>,
     pub message: String,
+}
+
+impl TypeCheckError {
+    pub fn new(message: impl Into<String>) -> Self {
+        Self {
+            node_id: None,
+            port_id: None,
+            definition_id: None,
+            message: message.into(),
+        }
+    }
+
+    pub fn at_node(node_id: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            node_id: Some(node_id.into()),
+            port_id: None,
+            definition_id: None,
+            message: message.into(),
+        }
+    }
+
+    pub fn at_port(
+        node_id: impl Into<String>,
+        port_id: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self {
+        Self {
+            node_id: Some(node_id.into()),
+            port_id: Some(port_id.into()),
+            definition_id: None,
+            message: message.into(),
+        }
+    }
+
+    pub fn for_definition(definition_id: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            node_id: None,
+            port_id: None,
+            definition_id: Some(definition_id.into()),
+            message: message.into(),
+        }
+    }
 }
 
 pub fn scoped_param(node_id: &NodeId, param: &TypeParamId) -> TypeParamId {

@@ -1,0 +1,17 @@
+[package]
+name = "imp_graph_resolve"
+description = "Late nested graph resolution for Imp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+imp_core_types.workspace = true
+imp_registry.workspace = true
+imp_typecheck.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+imp_collection_transforms.workspace = true
+imp_core_types.workspace = true
+imp_registry.workspace = true

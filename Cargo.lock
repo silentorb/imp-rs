@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "imp_collection_transforms"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "imp_core_types",
  "imp_registry",
@@ -12,17 +12,18 @@ dependencies = [
 
 [[package]]
 name = "imp_core_types"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "imp_execution"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "imp_collection_transforms",
  "imp_core_types",
+ "imp_graph_resolve",
  "imp_pathing",
  "imp_registry",
  "serde_json",
@@ -30,8 +31,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "imp_graph_library"
+version = "0.5.0"
+dependencies = [
+ "imp_core_types",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "imp_graph_resolve"
+version = "0.5.0"
+dependencies = [
+ "imp_collection_transforms",
+ "imp_core_types",
+ "imp_registry",
+ "imp_typecheck",
+ "serde_json",
+]
+
+[[package]]
 name = "imp_pathing"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "imp_core_types",
  "imp_registry",
@@ -39,7 +61,7 @@ dependencies = [
 
 [[package]]
 name = "imp_registry"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "imp_core_types",
  "thiserror",
@@ -47,7 +69,7 @@ dependencies = [
 
 [[package]]
 name = "imp_typecheck"
-version = "0.3.0"
+version = "0.5.0"
 dependencies = [
  "imp_collection_transforms",
  "imp_core_types",

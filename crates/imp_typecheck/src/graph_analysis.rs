@@ -29,6 +29,7 @@ pub fn catalog_port_type(
     Some(scope_signal_type(&port.signal_type, &node.id))
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum PortDirection {
     Input,
     Output,

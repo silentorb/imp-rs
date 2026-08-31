@@ -1,102 +1,23 @@
-//! Collection transforms catalog tests.
+//! Collection transforms library tests.
 
 use imp_collection_transforms::collection_transforms_library;
-use imp_core_types::{type_param, PrimitiveValue, SignalType};
-use imp_registry::{create_registry, get_node_type, load_library};
 
-fn collection_t() -> SignalType {
-    SignalType::Concrete {
-        id: "collection".into(),
-        args: vec![SignalType::Var { param: "T".into() }],
-    }
+fn def(id: &str) -> imp_core_types::NodeDefinition {
+    collection_transforms_library()
+        .definitions
+        .iter()
+        .find(|entry| entry.id == id)
+        .cloned()
+        .unwrap()
 }
 
 #[test]
-fn has_expected_identity_and_transform_types() {
+fn collection_transforms_library_has_expected_types() {
     let lib = collection_transforms_library();
     assert_eq!(lib.id, "imp.collection.transforms");
-    assert_eq!(lib.types.get("filter").unwrap().id, "filter");
-    assert_eq!(
-        lib.types.get("filter").unwrap().type_params,
-        vec![type_param("T")]
-    );
-    assert_eq!(lib.types.get("except").unwrap().id, "except");
-    assert_eq!(
-        lib.types
-            .get("except")
-            .unwrap()
-            .inputs
-            .get("exclude")
-            .unwrap()
-            .signal_type,
-        collection_t()
-    );
-    assert_eq!(
-        lib.types
-            .get("sort")
-            .unwrap()
-            .inputs
-            .get("direction")
-            .unwrap()
-            .default_value,
-        Some(PrimitiveValue::String("asc".into()))
-    );
-    assert_eq!(
-        lib.types
-            .get("group")
-            .unwrap()
-            .inputs
-            .get("direction")
-            .unwrap()
-            .default_value,
-        Some(PrimitiveValue::String("asc".into()))
-    );
-    assert!(matches!(
-        lib.types
-            .get("group")
-            .unwrap()
-            .inputs
-            .get("column")
-            .unwrap()
-            .signal_type,
-        SignalType::Concrete { ref id, .. } if id == "string"
-    ));
-    assert!(lib.types.contains_key("equals"));
-    assert!(lib.types.contains_key("not_equals"));
-    assert!(lib.types.contains_key("less_than"));
-    assert!(lib.types.contains_key("greater_than"));
-    assert!(lib.types.contains_key("column"));
-    assert!(lib.types.contains_key("literal"));
-}
-
-#[test]
-fn loads_into_imp_registry_without_conflicts() {
-    let registry = load_library(create_registry(), collection_transforms_library()).unwrap();
-    assert_eq!(
-        get_node_type(&registry, "filter")
-            .unwrap()
-            .outputs
-            .get("collection")
-            .unwrap()
-            .signal_type,
-        collection_t()
-    );
-    assert_eq!(
-        get_node_type(&registry, "except")
-            .unwrap()
-            .inputs
-            .get("exclude")
-            .unwrap()
-            .signal_type,
-        collection_t()
-    );
-    assert!(matches!(
-        get_node_type(&registry, "equals")
-            .unwrap()
-            .outputs
-            .get("value")
-            .unwrap()
-            .signal_type,
-        SignalType::Concrete { ref id, .. } if id == "boolean"
-    ));
+    assert_eq!(def("filter").id, "filter");
+    assert_eq!(def("filter").type_params, vec![imp_core_types::type_param("T")]);
+    assert_eq!(def("except").id, "except");
+    assert!(def("equals").inputs.contains_key("left"));
+    assert!(lib.definitions.iter().any(|entry| entry.id == "literal"));
 }

@@ -50,23 +50,21 @@ pub fn check_type_param_bounds(graph: &Graph, registry: &Registry) -> Vec<TypeCh
 
             for bound_id in &param.bounds {
                 let Some(constraint) = get_type_constraint(registry, bound_id) else {
-                    errors.push(TypeCheckError {
-                        node_id: Some(node.id.clone()),
-                        port_id: None,
-                        message: format!("unknown type constraint \"{bound_id}\""),
-                    });
+                    errors.push(TypeCheckError::at_node(
+                        node.id.clone(),
+                        format!("unknown type constraint \"{bound_id}\""),
+                    ));
                     continue;
                 };
 
                 if !satisfies_constraint(type_arg, constraint) {
-                    errors.push(TypeCheckError {
-                        node_id: Some(node.id.clone()),
-                        port_id: None,
-                        message: format!(
+                    errors.push(TypeCheckError::at_node(
+                        node.id.clone(),
+                        format!(
                             "type argument {} does not satisfy bound \"{bound_id}\"",
                             format_signal_type(type_arg)
                         ),
-                    });
+                    ));
                 }
             }
         }

@@ -1,7 +1,7 @@
 //! Core boundary node types. Spec: imp-spec/docs/packages/imp-core-types/graph-model.md
 
 use crate::{
-    concrete_type, type_var, NodeLibrary, NodeType, Port, Ports, PrimitiveValue, SignalType,
+    concrete_type, type_var, NodeDefinition, NodeLibrary, Port, Ports, PrimitiveValue, SignalType,
     TypeParam,
     type_param,
 };
@@ -25,56 +25,52 @@ pub fn core_node_library() -> NodeLibrary {
     let string = concrete_type("string", vec![]);
     let any = concrete_type("any", vec![]);
 
-    let mut types = BTreeMap::new();
-
-    types.insert(
-        "input".into(),
-        NodeType {
-            implementation: None,
-            id: "input".into(),
-            type_params: type_param_t(),
-            inputs: Ports::new(),
-            outputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
-        },
-    );
-
-    types.insert(
-        "output".into(),
-        NodeType {
-            implementation: None,
-            id: "output".into(),
-            type_params: type_param_t(),
-            inputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
-            outputs: Ports::new(),
-        },
-    );
-
-    types.insert(
-        "parameter".into(),
-        NodeType {
-            implementation: None,
-            id: "parameter".into(),
-            type_params: type_param_t(),
-            inputs: BTreeMap::from([
-                (
-                    "label".into(),
-                    port(
-                        "label",
-                        string.clone(),
-                        Some(PrimitiveValue::String(String::new())),
-                    ),
-                ),
-                (
-                    "value".into(),
-                    port("value", any.clone(), Some(PrimitiveValue::Null)),
-                ),
-            ]),
-            outputs: BTreeMap::from([("value".into(), port("value", t, None))]),
-        },
-    );
-
     NodeLibrary {
         id: "imp.core".into(),
-        types,
+        definitions: vec![
+            NodeDefinition {
+                id: "input".into(),
+                name: None,
+                type_params: type_param_t(),
+                implementation: None,
+                inputs: Ports::new(),
+                outputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
+                body: None,
+                bindings: None,
+            },
+            NodeDefinition {
+                id: "output".into(),
+                name: None,
+                type_params: type_param_t(),
+                implementation: None,
+                inputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
+                outputs: Ports::new(),
+                body: None,
+                bindings: None,
+            },
+            NodeDefinition {
+                id: "parameter".into(),
+                name: None,
+                type_params: type_param_t(),
+                implementation: None,
+                inputs: BTreeMap::from([
+                    (
+                        "label".into(),
+                        port(
+                            "label",
+                            string.clone(),
+                            Some(PrimitiveValue::String(String::new())),
+                        ),
+                    ),
+                    (
+                        "value".into(),
+                        port("value", any.clone(), Some(PrimitiveValue::Null)),
+                    ),
+                ]),
+                outputs: BTreeMap::from([("value".into(), port("value", t, None))]),
+                body: None,
+                bindings: None,
+            },
+        ],
     }
 }

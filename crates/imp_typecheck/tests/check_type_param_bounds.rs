@@ -27,33 +27,33 @@ fn scalar_constraint_library() -> TypeConstraintLibrary {
 fn identity_library() -> NodeLibrary {
     NodeLibrary {
         id: "example.identity".into(),
-        types: BTreeMap::from([(
-            "identity".into(),
-            NodeType {
-                id: "identity".into(),
-                type_params: vec![TypeParam {
-                    id: "T".into(),
-                    bounds: vec!["Scalar".into()],
-                }],
-                inputs: BTreeMap::from([(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
-                    },
-                )]),
-                outputs: BTreeMap::from([(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
-                    },
-                )]),
-                implementation: None,
-            },
-        )]),
+        definitions: vec![NodeType {
+            id: "identity".into(),
+            name: None,
+            type_params: vec![TypeParam {
+                id: "T".into(),
+                bounds: vec!["Scalar".into()],
+            }],
+            body: None,
+            bindings: None,
+            implementation: None,
+            inputs: BTreeMap::from([(
+                "value".into(),
+                Port {
+                    id: "value".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+            outputs: BTreeMap::from([(
+                "value".into(),
+                Port {
+                    id: "value".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+        }],
     }
 }
 
@@ -204,33 +204,33 @@ fn check_graph_any_satisfies_bound() {
 fn check_graph_reports_unknown_bound_id() {
     let bad_library = NodeLibrary {
         id: "example.bad".into(),
-        types: BTreeMap::from([(
-            "bad".into(),
-            NodeType {
-                id: "bad".into(),
-                type_params: vec![TypeParam {
-                    id: "T".into(),
-                    bounds: vec!["Missing".into()],
-                }],
-                inputs: BTreeMap::from([(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
-                    },
-                )]),
-                outputs: BTreeMap::from([(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
-                    },
-                )]),
-                implementation: None,
-            },
-        )]),
+        definitions: vec![NodeType {
+            id: "bad".into(),
+            name: None,
+            type_params: vec![TypeParam {
+                id: "T".into(),
+                bounds: vec!["Missing".into()],
+            }],
+            body: None,
+            bindings: None,
+            implementation: None,
+            inputs: BTreeMap::from([(
+                "value".into(),
+                Port {
+                    id: "value".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+            outputs: BTreeMap::from([(
+                "value".into(),
+                Port {
+                    id: "value".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+        }],
     };
 
     let registry = load_library(
@@ -301,33 +301,33 @@ fn check_graph_matches_parametric_member_patterns() {
 
     let passthrough_library = NodeLibrary {
         id: "example.passthrough".into(),
-        types: BTreeMap::from([(
-            "passthrough".into(),
-            NodeType {
-                id: "passthrough".into(),
-                type_params: vec![TypeParam {
-                    id: "T".into(),
-                    bounds: vec!["StringCollection".into()],
-                }],
-                inputs: BTreeMap::from([(
-                    "collection".into(),
-                    Port {
-                        id: "collection".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
-                    },
-                )]),
-                outputs: BTreeMap::from([(
-                    "collection".into(),
-                    Port {
-                        id: "collection".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
-                    },
-                )]),
-                implementation: None,
-            },
-        )]),
+        definitions: vec![NodeType {
+            id: "passthrough".into(),
+            name: None,
+            type_params: vec![TypeParam {
+                id: "T".into(),
+                bounds: vec!["StringCollection".into()],
+            }],
+            body: None,
+            bindings: None,
+            implementation: None,
+            inputs: BTreeMap::from([(
+                "collection".into(),
+                Port {
+                    id: "collection".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+            outputs: BTreeMap::from([(
+                "collection".into(),
+                Port {
+                    id: "collection".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+        }],
     };
 
     let registry = load_type_constraint_library(

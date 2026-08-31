@@ -12,46 +12,46 @@ use std::collections::BTreeMap;
 fn cast_library() -> NodeLibrary {
     NodeLibrary {
         id: "example.cast".into(),
-        types: BTreeMap::from([(
-            "cast".into(),
-            NodeType {
-                id: "cast".into(),
-                type_params: vec![TypeParam {
-                    id: "T".into(),
-                    bounds: vec![],
-                }],
-                implementation: Some(NodeImplementation::Dispatch {
-                    param_index: None,
-                    cases: vec![
-                        ImplementationCase {
-                            match_type: concrete_type("string", vec![]),
-                            implementation: "cast_string".into(),
-                        },
-                        ImplementationCase {
-                            match_type: concrete_type("number", vec![]),
-                            implementation: "cast_number".into(),
-                        },
-                    ],
-                    default: Some("cast_any".into()),
-                }),
-                inputs: BTreeMap::from([(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: SignalType::Var { param: "T".into() },
-                        default_value: None,
+        definitions: vec![NodeType {
+            id: "cast".into(),
+            name: None,
+            type_params: vec![TypeParam {
+                id: "T".into(),
+                bounds: vec![],
+            }],
+            body: None,
+            bindings: None,
+            implementation: Some(NodeImplementation::Dispatch {
+                param_index: None,
+                cases: vec![
+                    ImplementationCase {
+                        match_type: concrete_type("string", vec![]),
+                        implementation: "cast_string".into(),
                     },
-                )]),
-                outputs: BTreeMap::from([(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: concrete_type("string", vec![]),
-                        default_value: None,
+                    ImplementationCase {
+                        match_type: concrete_type("number", vec![]),
+                        implementation: "cast_number".into(),
                     },
-                )]),
-            },
-        )]),
+                ],
+                default: Some("cast_any".into()),
+            }),
+            inputs: BTreeMap::from([(
+                "value".into(),
+                Port {
+                    id: "value".into(),
+                    signal_type: SignalType::Var { param: "T".into() },
+                    default_value: None,
+                },
+            )]),
+            outputs: BTreeMap::from([(
+                "value".into(),
+                Port {
+                    id: "value".into(),
+                    signal_type: concrete_type("string", vec![]),
+                    default_value: None,
+                },
+            )]),
+        }],
     }
 }
 
