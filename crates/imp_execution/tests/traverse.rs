@@ -50,6 +50,7 @@ fn traverse_graph() -> Graph {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -58,6 +59,7 @@ fn traverse_graph() -> Graph {
                 Node {
                     id: "hop".into(),
                     node_type: "traverse".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "association".into(),
@@ -72,6 +74,7 @@ fn traverse_graph() -> Graph {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -152,6 +155,7 @@ fn except_anti_membership() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -160,6 +164,7 @@ fn except_anti_membership() {
                 Node {
                     id: "hop".into(),
                     node_type: "traverse".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "association".into(),
@@ -174,6 +179,7 @@ fn except_anti_membership() {
                 Node {
                     id: "except".into(),
                     node_type: "except".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -182,6 +188,7 @@ fn except_anti_membership() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -270,6 +277,7 @@ fn except_exclude_unwired_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -278,6 +286,7 @@ fn except_exclude_unwired_errors() {
                 Node {
                     id: "except".into(),
                     node_type: "except".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -286,6 +295,7 @@ fn except_exclude_unwired_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),

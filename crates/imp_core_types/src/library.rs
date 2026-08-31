@@ -1,6 +1,7 @@
 //! Node type libraries. Spec: imp-spec/docs/packages/imp-core-types/node-libraries.md
 
-use crate::{NodeTypeId, Ports};
+use crate::implementation::NodeImplementation;
+use crate::{NodeTypeId, Ports, TypeParam};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -8,6 +9,10 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NodeType {
     pub id: NodeTypeId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub type_params: Vec<TypeParam>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub implementation: Option<NodeImplementation>,
     pub inputs: Ports,
     pub outputs: Ports,
 }

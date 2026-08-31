@@ -1,0 +1,13 @@
+[package]
+name = "imp_typecheck"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+imp_core_types = { workspace = true }
+imp_registry = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+imp_collection_transforms = { workspace = true }

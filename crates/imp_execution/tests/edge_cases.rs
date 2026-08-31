@@ -44,6 +44,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -52,6 +53,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "col".into(),
                     node_type: "column".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "name".into(),
                         PrimitiveValue::String("n".into()),
@@ -63,6 +65,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "lit".into(),
                     node_type: "literal".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("value".into(), PrimitiveValue::Number(3.0))]),
                 },
             ),
@@ -71,6 +74,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "lt".into(),
                     node_type: "less_than".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -79,6 +83,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "ne".into(),
                     node_type: "not_equals".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -87,6 +92,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "or".into(),
                     node_type: "or".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -95,6 +101,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "filter".into(),
                     node_type: "filter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -103,6 +110,7 @@ fn less_than_and_not_equals_predicates() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -254,6 +262,7 @@ fn sort_nulls_last() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -262,6 +271,7 @@ fn sort_nulls_last() {
                 Node {
                     id: "sort".into(),
                     node_type: "sort".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "column".into(),
@@ -279,6 +289,7 @@ fn sort_nulls_last() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -337,6 +348,7 @@ fn project_properties_prefix_and_is_archived() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -345,6 +357,7 @@ fn project_properties_prefix_and_is_archived() {
                 Node {
                     id: "project".into(),
                     node_type: "project".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "columns".into(),
                         PrimitiveValue::String("properties.title,is_archived".into()),
@@ -356,6 +369,7 @@ fn project_properties_prefix_and_is_archived() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -409,6 +423,7 @@ fn traverse_invalid_direction_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -417,6 +432,7 @@ fn traverse_invalid_direction_errors() {
                 Node {
                     id: "hop".into(),
                     node_type: "traverse".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "association".into(),
@@ -431,6 +447,7 @@ fn traverse_invalid_direction_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -482,6 +499,7 @@ fn multiple_boundary_nodes_error() {
                 Node {
                     id: "in1".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -490,6 +508,7 @@ fn multiple_boundary_nodes_error() {
                 Node {
                     id: "in2".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -498,6 +517,7 @@ fn multiple_boundary_nodes_error() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -522,6 +542,7 @@ fn unwired_explicit_sink_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -530,6 +551,7 @@ fn unwired_explicit_sink_errors() {
                 Node {
                     id: "limit".into(),
                     node_type: "limit".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("count".into(), PrimitiveValue::Number(1.0))]),
                 },
             ),
@@ -538,6 +560,7 @@ fn unwired_explicit_sink_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -594,6 +617,7 @@ fn explicit_sink_without_incoming_wire_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -602,6 +626,7 @@ fn explicit_sink_without_incoming_wire_errors() {
                 Node {
                     id: "limit".into(),
                     node_type: "limit".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("count".into(), PrimitiveValue::Number(1.0))]),
                 },
             ),
@@ -610,6 +635,7 @@ fn explicit_sink_without_incoming_wire_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -651,6 +677,7 @@ fn sort_desc_and_traverse_direction_one() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -659,6 +686,7 @@ fn sort_desc_and_traverse_direction_one() {
                 Node {
                     id: "param".into(),
                     node_type: "parameter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "label".into(),
@@ -676,6 +704,7 @@ fn sort_desc_and_traverse_direction_one() {
                 Node {
                     id: "sort".into(),
                     node_type: "sort".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "direction".into(),
                         PrimitiveValue::String("desc".into()),
@@ -687,6 +716,7 @@ fn sort_desc_and_traverse_direction_one() {
                 Node {
                     id: "hop".into(),
                     node_type: "traverse".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "association".into(),
@@ -701,6 +731,7 @@ fn sort_desc_and_traverse_direction_one() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -781,6 +812,7 @@ fn filter_predicate_must_be_wired() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -789,6 +821,7 @@ fn filter_predicate_must_be_wired() {
                 Node {
                     id: "filter".into(),
                     node_type: "filter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "predicate".into(),
                         PrimitiveValue::Bool(true),
@@ -800,6 +833,7 @@ fn filter_predicate_must_be_wired() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -851,6 +885,7 @@ fn project_empty_columns_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -859,6 +894,7 @@ fn project_empty_columns_errors() {
                 Node {
                     id: "project".into(),
                     node_type: "project".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "columns".into(),
                         PrimitiveValue::String("  ,  ".into()),
@@ -870,6 +906,7 @@ fn project_empty_columns_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),

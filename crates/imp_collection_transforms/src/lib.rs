@@ -1,12 +1,11 @@
 //! Collection transform NodeLibrary.
 //! Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md
 
-use imp_core_types::{NodeLibrary, NodeType, Port, Ports, PrimitiveValue, SignalType};
+use imp_core_types::{
+    collection_of, concrete_type, type_var, NodeImplementation, NodeLibrary, NodeType, Port, Ports,
+    PrimitiveValue, SignalType, TypeParam,
+};
 use std::collections::BTreeMap;
-
-fn signal(id: &str) -> SignalType {
-    SignalType { id: id.into() }
-}
 
 fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>) -> Port {
     Port {
@@ -16,180 +15,224 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
     }
 }
 
+fn type_param_t() -> Vec<TypeParam> {
+    vec![TypeParam { id: "T".into() }]
+}
+
+fn collection_t() -> SignalType {
+    collection_of(type_var("T"))
+}
+
 fn collection_in() -> Port {
-    port("collection", signal("collection"), None)
+    port("collection", collection_t(), None)
 }
 
 fn collection_out() -> Port {
-    port("collection", signal("collection"), None)
+    port("collection", collection_t(), None)
+}
+
+fn collection_preserving(id: &str, extra_inputs: Ports) -> NodeType {
+    let mut inputs = BTreeMap::from([("collection".into(), collection_in())]);
+    inputs.extend(extra_inputs);
+    NodeType {
+        id: id.into(),
+        type_params: type_param_t(),
+        implementation: Some(NodeImplementation::universal(id)),
+        inputs,
+        outputs: BTreeMap::from([("collection".into(), collection_out())]),
+    }
 }
 
 /// Collection combinator and predicate catalog.
 pub fn collection_transforms_library() -> NodeLibrary {
-    let collection = signal("collection");
-    let boolean = signal("boolean");
-    let string = signal("string");
-    let number = signal("number");
-    let any = signal("any");
+    let collection_t_sig = collection_t();
+    let boolean = concrete_type("boolean", vec![]);
+    let string = concrete_type("string", vec![]);
+    let number = concrete_type("number", vec![]);
+    let any = concrete_type("any", vec![]);
 
     let mut types = BTreeMap::new();
 
-    let mut add = |id: &str, inputs: Ports, outputs: Ports| {
-        types.insert(
-            id.into(),
-            NodeType {
-                id: id.into(),
-                inputs,
-                outputs,
-            },
-        );
+    let mut add = |id: &str, node_type: NodeType| {
+        types.insert(id.into(), node_type);
     };
 
     add(
         "filter",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("predicate".into(), port("predicate", boolean.clone(), None)),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+        collection_preserving(
+            "filter",
+            BTreeMap::from([("predicate".into(), port("predicate", boolean.clone(), None))]),
+        ),
     );
 
     add(
         "except",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("exclude".into(), port("exclude", collection.clone(), None)),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+        collection_preserving(
+            "except",
+            BTreeMap::from([(
+                "exclude".into(),
+                port("exclude", collection_t_sig.clone(), None),
+            )]),
+        ),
     );
 
     add(
         "sort",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("column".into(), port("column", string.clone(), None)),
-            (
-                "direction".into(),
-                port(
-                    "direction",
-                    string.clone(),
-                    Some(PrimitiveValue::String("asc".into())),
+        collection_preserving(
+            "sort",
+            BTreeMap::from([
+                ("column".into(), port("column", string.clone(), None)),
+                (
+                    "direction".into(),
+                    port(
+                        "direction",
+                        string.clone(),
+                        Some(PrimitiveValue::String("asc".into())),
+                    ),
                 ),
-            ),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+            ]),
+        ),
     );
 
     add(
         "limit",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("count".into(), port("count", number.clone(), None)),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+        collection_preserving(
+            "limit",
+            BTreeMap::from([("count".into(), port("count", number.clone(), None))]),
+        ),
     );
 
     add(
         "offset",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("count".into(), port("count", number.clone(), None)),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+        collection_preserving(
+            "offset",
+            BTreeMap::from([("count".into(), port("count", number.clone(), None))]),
+        ),
     );
 
     add(
         "project",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("columns".into(), port("columns", string.clone(), None)),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+        collection_preserving(
+            "project",
+            BTreeMap::from([("columns".into(), port("columns", string.clone(), None))]),
+        ),
     );
 
     add(
         "group",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("column".into(), port("column", string.clone(), None)),
-            (
-                "direction".into(),
-                port(
-                    "direction",
-                    string.clone(),
-                    Some(PrimitiveValue::String("asc".into())),
+        collection_preserving(
+            "group",
+            BTreeMap::from([
+                ("column".into(), port("column", string.clone(), None)),
+                (
+                    "direction".into(),
+                    port(
+                        "direction",
+                        string.clone(),
+                        Some(PrimitiveValue::String("asc".into())),
+                    ),
                 ),
-            ),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+            ]),
+        ),
     );
 
     add(
         "search",
-        BTreeMap::from([
-            ("collection".into(), collection_in()),
-            ("query".into(), port("query", string.clone(), None)),
-        ]),
-        BTreeMap::from([("collection".into(), collection_out())]),
+        collection_preserving(
+            "search",
+            BTreeMap::from([("query".into(), port("query", string.clone(), None))]),
+        ),
     );
 
     add(
         "contains",
-        BTreeMap::from([
-            ("haystack".into(), port("haystack", any.clone(), None)),
-            ("needle".into(), port("needle", string.clone(), None)),
-        ]),
-        BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+        NodeType {
+            implementation: None,
+            id: "contains".into(),
+            type_params: vec![],
+            inputs: BTreeMap::from([
+                ("haystack".into(), port("haystack", any.clone(), None)),
+                ("needle".into(), port("needle", string.clone(), None)),
+            ]),
+            outputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+        },
     );
 
     for name in ["equals", "not_equals", "less_than", "greater_than"] {
         add(
             name,
-            BTreeMap::from([
-                ("left".into(), port("left", any.clone(), None)),
-                ("right".into(), port("right", any.clone(), None)),
-            ]),
-            BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+            NodeType {
+                implementation: None,
+                id: name.into(),
+                type_params: vec![],
+                inputs: BTreeMap::from([
+                    ("left".into(), port("left", any.clone(), None)),
+                    ("right".into(), port("right", any.clone(), None)),
+                ]),
+                outputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+            },
         );
     }
 
     add(
         "and",
-        BTreeMap::from([
-            ("left".into(), port("left", boolean.clone(), None)),
-            ("right".into(), port("right", boolean.clone(), None)),
-        ]),
-        BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+        NodeType {
+            implementation: None,
+            id: "and".into(),
+            type_params: vec![],
+            inputs: BTreeMap::from([
+                ("left".into(), port("left", boolean.clone(), None)),
+                ("right".into(), port("right", boolean.clone(), None)),
+            ]),
+            outputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+        },
     );
 
     add(
         "or",
-        BTreeMap::from([
-            ("left".into(), port("left", boolean.clone(), None)),
-            ("right".into(), port("right", boolean.clone(), None)),
-        ]),
-        BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+        NodeType {
+            implementation: None,
+            id: "or".into(),
+            type_params: vec![],
+            inputs: BTreeMap::from([
+                ("left".into(), port("left", boolean.clone(), None)),
+                ("right".into(), port("right", boolean.clone(), None)),
+            ]),
+            outputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+        },
     );
 
     add(
         "not",
-        BTreeMap::from([(
-            "value".into(),
-            port("value", boolean.clone(), None),
-        )]),
-        BTreeMap::from([("value".into(), port("value", boolean, None))]),
+        NodeType {
+            implementation: None,
+            id: "not".into(),
+            type_params: vec![],
+            inputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
+            outputs: BTreeMap::from([("value".into(), port("value", boolean, None))]),
+        },
     );
 
     add(
         "column",
-        BTreeMap::from([("name".into(), port("name", string.clone(), None))]),
-        BTreeMap::from([("value".into(), port("value", any.clone(), None))]),
+        NodeType {
+            implementation: None,
+            id: "column".into(),
+            type_params: vec![],
+            inputs: BTreeMap::from([("name".into(), port("name", string.clone(), None))]),
+            outputs: BTreeMap::from([("value".into(), port("value", any.clone(), None))]),
+        },
     );
 
     add(
         "literal",
-        BTreeMap::from([("value".into(), port("value", any.clone(), None))]),
-        BTreeMap::from([("value".into(), port("value", any, None))]),
+        NodeType {
+            implementation: None,
+            id: "literal".into(),
+            type_params: vec![],
+            inputs: BTreeMap::from([("value".into(), port("value", any.clone(), None))]),
+            outputs: BTreeMap::from([("value".into(), port("value", any, None))]),
+        },
     );
 
     NodeLibrary {

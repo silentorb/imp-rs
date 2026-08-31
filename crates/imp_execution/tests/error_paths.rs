@@ -34,11 +34,13 @@ fn basic_in_out() -> (Node, Node) {
         Node {
             id: "in".into(),
             node_type: "input".into(),
+            type_args: vec![],
             inputs: BTreeMap::new(),
         },
         Node {
             id: "out".into(),
             node_type: "output".into(),
+            type_args: vec![],
             inputs: BTreeMap::new(),
         },
     )
@@ -56,6 +58,7 @@ fn limit_count_must_be_number() {
                 Node {
                     id: "limit".into(),
                     node_type: "limit".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "count".into(),
                         PrimitiveValue::String("x".into()),
@@ -112,6 +115,7 @@ fn sort_column_wire_must_resolve_to_literal() {
                 Node {
                     id: "eq".into(),
                     node_type: "equals".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -120,6 +124,7 @@ fn sort_column_wire_must_resolve_to_literal() {
                 Node {
                     id: "sort".into(),
                     node_type: "sort".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -186,6 +191,7 @@ fn contains_non_string_returns_false() {
                 Node {
                     id: "col".into(),
                     node_type: "column".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "name".into(),
                         PrimitiveValue::String("score".into()),
@@ -197,6 +203,7 @@ fn contains_non_string_returns_false() {
                 Node {
                     id: "lit".into(),
                     node_type: "literal".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("value".into(), PrimitiveValue::String("1".into()))]),
                 },
             ),
@@ -205,6 +212,7 @@ fn contains_non_string_returns_false() {
                 Node {
                     id: "contains".into(),
                     node_type: "contains".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -213,6 +221,7 @@ fn contains_non_string_returns_false() {
                 Node {
                     id: "filter".into(),
                     node_type: "filter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -337,6 +346,7 @@ fn traverse_invalid_edge_property_type_errors() {
                 Node {
                     id: "hop".into(),
                     node_type: "traverse".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "association".into(),
@@ -398,6 +408,7 @@ fn column_name_must_be_string() {
                 Node {
                     id: "col".into(),
                     node_type: "column".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("name".into(), PrimitiveValue::Number(1.0))]),
                 },
             ),
@@ -406,6 +417,7 @@ fn column_name_must_be_string() {
                 Node {
                     id: "lit".into(),
                     node_type: "literal".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("value".into(), PrimitiveValue::Number(1.0))]),
                 },
             ),
@@ -414,6 +426,7 @@ fn column_name_must_be_string() {
                 Node {
                     id: "eq".into(),
                     node_type: "equals".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -422,6 +435,7 @@ fn column_name_must_be_string() {
                 Node {
                     id: "filter".into(),
                     node_type: "filter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -511,6 +525,7 @@ fn no_output_boundary_node_errors() {
             Node {
                 id: "in".into(),
                 node_type: "input".into(),
+                type_args: vec![],
                 inputs: BTreeMap::new(),
             },
         )]),
@@ -533,6 +548,7 @@ fn explicit_non_output_sink_evaluates_upstream_port() {
                 Node {
                     id: "limit".into(),
                     node_type: "limit".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("count".into(), PrimitiveValue::Number(1.0))]),
                 },
             ),
@@ -591,6 +607,7 @@ fn unknown_node_type_in_registry_errors() {
                 Node {
                     id: "bad".into(),
                     node_type: "totally_unknown".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),

@@ -40,6 +40,7 @@ fn offset_skips_rows() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -48,6 +49,7 @@ fn offset_skips_rows() {
                 Node {
                     id: "offset".into(),
                     node_type: "offset".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("count".into(), PrimitiveValue::Number(1.0))]),
                 },
             ),
@@ -56,6 +58,7 @@ fn offset_skips_rows() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -110,6 +113,7 @@ fn parameter_node_in_filter_predicate() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -118,6 +122,7 @@ fn parameter_node_in_filter_predicate() {
                 Node {
                     id: "col".into(),
                     node_type: "column".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "name".into(),
                         PrimitiveValue::String("status".into()),
@@ -129,6 +134,7 @@ fn parameter_node_in_filter_predicate() {
                 Node {
                     id: "param".into(),
                     node_type: "parameter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([
                         (
                             "label".into(),
@@ -146,6 +152,7 @@ fn parameter_node_in_filter_predicate() {
                 Node {
                     id: "eq".into(),
                     node_type: "equals".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -154,6 +161,7 @@ fn parameter_node_in_filter_predicate() {
                 Node {
                     id: "filter".into(),
                     node_type: "filter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -162,6 +170,7 @@ fn parameter_node_in_filter_predicate() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -255,6 +264,7 @@ fn comparison_predicates() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -263,6 +273,7 @@ fn comparison_predicates() {
                 Node {
                     id: "col".into(),
                     node_type: "column".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "name".into(),
                         PrimitiveValue::String("score".into()),
@@ -274,6 +285,7 @@ fn comparison_predicates() {
                 Node {
                     id: "lit".into(),
                     node_type: "literal".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([("value".into(), PrimitiveValue::Number(5.0))]),
                 },
             ),
@@ -282,6 +294,7 @@ fn comparison_predicates() {
                 Node {
                     id: "gt".into(),
                     node_type: "greater_than".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -290,6 +303,7 @@ fn comparison_predicates() {
                 Node {
                     id: "filter".into(),
                     node_type: "filter".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -298,6 +312,7 @@ fn comparison_predicates() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -429,6 +444,7 @@ fn search_delegates_to_host_text_search() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -437,6 +453,7 @@ fn search_delegates_to_host_text_search() {
                 Node {
                     id: "search".into(),
                     node_type: "search".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::from([(
                         "query".into(),
                         PrimitiveValue::String("Beta".into()),
@@ -448,6 +465,7 @@ fn search_delegates_to_host_text_search() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -502,6 +520,7 @@ fn rejects_missing_read_capability() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -510,6 +529,7 @@ fn rejects_missing_read_capability() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -548,6 +568,7 @@ fn duplicate_edge_target_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -556,6 +577,7 @@ fn duplicate_edge_target_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -604,6 +626,7 @@ fn unsupported_node_type_errors() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -612,6 +635,7 @@ fn unsupported_node_type_errors() {
                 Node {
                     id: "weird".into(),
                     node_type: "no_such_type".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -620,6 +644,7 @@ fn unsupported_node_type_errors() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -670,6 +695,7 @@ fn empty_result_has_id_column() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -678,6 +704,7 @@ fn empty_result_has_id_column() {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),

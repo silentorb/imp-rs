@@ -3,19 +3,21 @@ resolver = "2"
 members = [
     "crates/imp_core_types",
     "crates/imp_registry",
+    "crates/imp_typecheck",
     "crates/imp_collection_transforms",
     "crates/imp_pathing",
     "crates/imp_execution",
 ]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 
 [workspace.dependencies]
 imp_core_types = { path = "crates/imp_core_types" }
 imp_registry = { path = "crates/imp_registry" }
+imp_typecheck = { path = "crates/imp_typecheck" }
 imp_collection_transforms = { path = "crates/imp_collection_transforms" }
 imp_pathing = { path = "crates/imp_pathing" }
 imp_execution = { path = "crates/imp_execution" }

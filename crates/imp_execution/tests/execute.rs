@@ -38,6 +38,7 @@ fn passthrough_graph() -> Graph {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -46,6 +47,7 @@ fn passthrough_graph() -> Graph {
                 Node {
                     id: "out".into(),
                     node_type: "output".into(),
+                    type_args: vec![],
                     inputs: BTreeMap::new(),
                 },
             ),

@@ -9,6 +9,12 @@ pub type NodeTypeId = String;
 pub type PortId = String;
 pub type SignalTypeId = String;
 
+mod signal_type;
+pub use signal_type::{
+    collection_of, concrete_type, is_concrete, is_type_var, type_var, SignalType, TypeParam,
+    TypeParamId,
+};
+
 /// Literal value for instance inputs or port defaults.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -17,12 +23,6 @@ pub enum PrimitiveValue {
     Number(f64),
     Bool(bool),
     Null,
-}
-
-/// Imp signal type. Minimal — identity only; fields may grow later.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SignalType {
-    pub id: SignalTypeId,
 }
 
 /// One port template: identity + signal type + optional default.
@@ -53,6 +53,8 @@ pub struct Node {
     pub id: NodeId,
     #[serde(rename = "type")]
     pub node_type: NodeTypeId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub type_args: Vec<SignalType>,
     #[serde(default)]
     pub inputs: InputValues,
 }
@@ -73,6 +75,14 @@ pub struct Graph {
 
 mod library;
 pub use library::{NodeLibrary, NodeType};
+
+mod graph_type;
+pub use graph_type::{GraphType, GraphTypeId, GraphTypeLibrary};
+
+mod implementation;
+pub use implementation::{
+    ImplementationCase, ImplementationId, NodeImplementation,
+};
 
 mod core_library;
 pub use core_library::core_node_library;

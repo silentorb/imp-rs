@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "imp_collection_transforms"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "imp_core_types",
  "imp_registry",
@@ -12,14 +12,14 @@ dependencies = [
 
 [[package]]
 name = "imp_core_types"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "imp_execution"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "imp_collection_transforms",
  "imp_core_types",
@@ -31,7 +31,7 @@ dependencies = [
 
 [[package]]
 name = "imp_pathing"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "imp_core_types",
  "imp_registry",
@@ -39,9 +39,19 @@ dependencies = [
 
 [[package]]
 name = "imp_registry"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "imp_core_types",
+ "thiserror",
+]
+
+[[package]]
+name = "imp_typecheck"
+version = "0.3.0"
+dependencies = [
+ "imp_collection_transforms",
+ "imp_core_types",
+ "imp_registry",
  "thiserror",
 ]
 

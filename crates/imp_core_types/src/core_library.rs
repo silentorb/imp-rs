@@ -1,19 +1,10 @@
 //! Core boundary node types. Spec: imp-spec/docs/packages/imp-core-types/graph-model.md
 
-use crate::{NodeLibrary, NodeType, Port, Ports, PrimitiveValue, SignalType};
+use crate::{
+    concrete_type, type_var, NodeLibrary, NodeType, Port, Ports, PrimitiveValue, SignalType,
+    TypeParam,
+};
 use std::collections::BTreeMap;
-
-fn any_signal() -> SignalType {
-    SignalType {
-        id: "any".into(),
-    }
-}
-
-fn string_signal() -> SignalType {
-    SignalType {
-        id: "string".into(),
-    }
-}
 
 fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>) -> Port {
     Port {
@@ -23,33 +14,36 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
     }
 }
 
+fn type_param_t() -> Vec<TypeParam> {
+    vec![TypeParam { id: "T".into() }]
+}
+
 /// Core Imp boundary nodes — one instance per external port.
 pub fn core_node_library() -> NodeLibrary {
-    let any = any_signal();
-    let string = string_signal();
+    let t = type_var("T");
+    let string = concrete_type("string", vec![]);
+    let any = concrete_type("any", vec![]);
 
     let mut types = BTreeMap::new();
 
     types.insert(
         "input".into(),
         NodeType {
+            implementation: None,
             id: "input".into(),
+            type_params: type_param_t(),
             inputs: Ports::new(),
-            outputs: BTreeMap::from([(
-                "value".into(),
-                port("value", any.clone(), None),
-            )]),
+            outputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
         },
     );
 
     types.insert(
         "output".into(),
         NodeType {
+            implementation: None,
             id: "output".into(),
-            inputs: BTreeMap::from([(
-                "value".into(),
-                port("value", any.clone(), None),
-            )]),
+            type_params: type_param_t(),
+            inputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
             outputs: Ports::new(),
         },
     );
@@ -57,7 +51,9 @@ pub fn core_node_library() -> NodeLibrary {
     types.insert(
         "parameter".into(),
         NodeType {
+            implementation: None,
             id: "parameter".into(),
+            type_params: type_param_t(),
             inputs: BTreeMap::from([
                 (
                     "label".into(),
@@ -72,10 +68,7 @@ pub fn core_node_library() -> NodeLibrary {
                     port("value", any.clone(), Some(PrimitiveValue::Null)),
                 ),
             ]),
-            outputs: BTreeMap::from([(
-                "value".into(),
-                port("value", any, None),
-            )]),
+            outputs: BTreeMap::from([("value".into(), port("value", t, None))]),
         },
     );
 

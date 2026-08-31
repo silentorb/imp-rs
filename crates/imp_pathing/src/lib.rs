@@ -1,11 +1,10 @@
 //! Pathing NodeLibrary. Spec: imp-spec/docs/packages/imp-pathing/pathing.md
 
-use imp_core_types::{NodeLibrary, NodeType, Port, PrimitiveValue, SignalType};
+use imp_core_types::{
+    collection_of, concrete_type, type_var, NodeImplementation, NodeLibrary, NodeType, Port,
+    PrimitiveValue, SignalType, TypeParam,
+};
 use std::collections::BTreeMap;
-
-fn signal(id: &str) -> SignalType {
-    SignalType { id: id.into() }
-}
 
 fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>) -> Port {
     Port {
@@ -17,15 +16,17 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
 
 /// GQL-like path operator catalog.
 pub fn pathing_library() -> NodeLibrary {
-    let collection = signal("collection");
-    let string = signal("string");
-    let number = signal("number");
-    let any = signal("any");
+    let collection_t = collection_of(type_var("T"));
+    let string = concrete_type("string", vec![]);
+    let number = concrete_type("number", vec![]);
+    let any = concrete_type("any", vec![]);
 
     let traverse = NodeType {
         id: "traverse".into(),
+        type_params: vec![TypeParam { id: "T".into() }],
+        implementation: Some(NodeImplementation::universal("traverse")),
         inputs: BTreeMap::from([
-            ("collection".into(), port("collection", collection.clone(), None)),
+            ("collection".into(), port("collection", collection_t.clone(), None)),
             ("association".into(), port("association", string.clone(), None)),
             (
                 "direction".into(),
@@ -46,7 +47,7 @@ pub fn pathing_library() -> NodeLibrary {
         ]),
         outputs: BTreeMap::from([(
             "collection".into(),
-            port("collection", collection, None),
+            port("collection", collection_t, None),
         )]),
     };
 

@@ -1,7 +1,6 @@
 //! Registry load/lookup tests.
 
-use imp_core_types::core_node_library;
-use imp_core_types::{NodeLibrary, NodeType, Port, Ports, SignalType};
+use imp_core_types::{concrete_type, core_node_library, NodeLibrary, NodeType, Port, Ports, SignalType};
 use imp_registry::{
     create_registry, get_node_type, list_libraries, list_node_types, load_library,
     DuplicateNodeTypeError,
@@ -14,15 +13,15 @@ fn source_library() -> NodeLibrary {
         types: BTreeMap::from([(
             "source".into(),
             NodeType {
+                implementation: None,
                 id: "source".into(),
+                type_params: vec![],
                 inputs: Ports::new(),
                 outputs: BTreeMap::from([(
                     "out".into(),
                     Port {
                         id: "out".into(),
-                        signal_type: SignalType {
-                            id: "signal".into(),
-                        },
+                        signal_type: concrete_type("signal", vec![]),
                         default_value: None,
                     },
                 )]),
@@ -37,14 +36,14 @@ fn sink_library() -> NodeLibrary {
         types: BTreeMap::from([(
             "sink".into(),
             NodeType {
+                implementation: None,
                 id: "sink".into(),
+                type_params: vec![],
                 inputs: BTreeMap::from([(
                     "in".into(),
                     Port {
                         id: "in".into(),
-                        signal_type: SignalType {
-                            id: "signal".into(),
-                        },
+                        signal_type: concrete_type("signal", vec![]),
                         default_value: None,
                     },
                 )]),
@@ -60,7 +59,9 @@ fn conflicting_library() -> NodeLibrary {
         types: BTreeMap::from([(
             "source".into(),
             NodeType {
+                implementation: None,
                 id: "source".into(),
+                type_params: vec![],
                 inputs: Ports::new(),
                 outputs: Ports::new(),
             },
