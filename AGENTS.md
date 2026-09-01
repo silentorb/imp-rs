@@ -8,9 +8,13 @@
 | --- | --- | --- |
 | `crates/imp_core_types/` | `imp-core-types` | Core graph + library types; core boundary `NodeLibrary` |
 | `crates/imp_registry/` | `imp-registry` | Load `NodeLibrary` values and look up `NodeType`s |
+| `crates/imp_typecheck/` | `imp-typecheck` | Static signal-type checking |
+| `crates/imp_graph_resolve/` | `imp-graph-resolve` | Late nested graph resolution |
 | `crates/imp_collection_transforms/` | `imp-collection-transforms` | Collection combinator `NodeLibrary` |
 | `crates/imp_pathing/` | `imp-pathing` | GQL-like path operator `NodeLibrary` |
-| `crates/imp_execution/` | `imp-execution` | Dynamic graph execution runtime |
+| `crates/imp_execution/` | `imp-execution` | Runtime consumer (deferred) |
+
+**Imp Translator** specs (SQL, React Flow) and runtime docs live in [`imp-ts/docs/features/`](../imp-ts/docs/features/), not imp-spec.
 
 ## Specs vs code
 
@@ -35,10 +39,12 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | --- | --- |
 | Core graph model | [graph-model](../imp-spec/docs/packages/imp-core-types/graph-model.md) |
 | Node type libraries | [node-libraries](../imp-spec/docs/packages/imp-core-types/node-libraries.md) |
+| Graph libraries | [graph-libraries](../imp-spec/docs/packages/imp-core-types/graph-libraries.md) |
+| Graph resolution | [resolve](../imp-spec/docs/packages/imp-graph-resolve/resolve.md) |
+| Static type checking | [type-system](../imp-spec/docs/packages/imp-typecheck/type-system.md) |
 | Registry | [registry](../imp-spec/docs/packages/imp-registry/registry.md) |
 | Collection transforms | [collection-transforms](../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) |
 | Pathing | [pathing](../imp-spec/docs/packages/imp-pathing/pathing.md) |
-| Dynamic execution | [execution](../imp-spec/docs/packages/imp-execution/execution.md) |
 
 Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview/).
 

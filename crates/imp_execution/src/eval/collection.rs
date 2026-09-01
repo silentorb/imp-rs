@@ -1,5 +1,5 @@
 //! In-memory collection evaluation.
-//! Spec: imp-spec/docs/packages/imp-execution/execution.md
+//! Spec: imp-ts/docs/features/execution.md
 
 use crate::error::ExecutionError;
 use crate::host::{ExecutionHost, ExecutionRow};

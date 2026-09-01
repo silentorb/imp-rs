@@ -1,5 +1,5 @@
 //! Dynamic Imp graph execution entry point.
-//! Spec: imp-spec/docs/packages/imp-execution/execution.md
+//! Spec: imp-ts/docs/features/execution.md
 
 use crate::error::ExecutionError;
 use crate::eval::{eval_collection_port, result_from_rows, EvalContext};

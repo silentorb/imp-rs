@@ -1,7 +1,7 @@
 //! Dynamic Imp graph execution runtime.
 //!
 //! Demand-driven evaluation of collection/path graphs via a read-only host.
-//! Spec: imp-spec/docs/packages/imp-execution/execution.md
+//! Spec: imp-ts/docs/features/execution.md
 //!
 //! Performance tiers (future): tree-walking interpreter (v1), optional memoization,
 //! bytecode VM, and buffer-oriented hosts for DSP.
