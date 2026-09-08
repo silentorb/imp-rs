@@ -29,6 +29,12 @@ Prefer **lowest-common-denominator FP**: plain data, free functions, and many **
 
 - Prefer `Result` / explicit status for **expected** failure (graph errors, missing ports, duplicate type ids).
 - Panic only for programmer invariants or documented fail-fast aborts.
+- Prefer precise, explicit error flows over broad catch-all handling.
+- Propagate errors with `?` unless the current layer can meaningfully recover.
+- Handle errors locally only with an intentional recovery or translation strategy.
+- Preserve error causes and useful context.
+- Use typed errors when callers need to distinguish failure cases.
+- Avoid silently ignored errors, arbitrary fallbacks, and unjustified `unwrap()`/`expect()`.
 
 ## Crate layout
 

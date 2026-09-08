@@ -53,7 +53,7 @@ Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview
 - Focused changes only; avoid unrelated refactors.
 - **Prototypal stage — no backwards compatibility.** Delete old shapes; migrate consumers in the same change.
 - Crate names use **snake_case** (`imp_core_types`); imp-ts npm packages use hyphenated `imp-*`.
-- Follow [docs/rust-style.md](./docs/rust-style.md): plain structs, free functions, immutable inputs / owned outputs.
+- Follow [docs/rust-style.md](./docs/rust-style.md): plain structs, free functions, immutable inputs / owned outputs, and [Errors](./docs/rust-style.md#errors).
 
 ## Versioning
 
