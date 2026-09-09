@@ -1,6 +1,6 @@
-# Imp (Rust binding)
+# Imp (Rust implementation)
 
-Rust implementation of the Imp DAG transmission format. Language-neutral specs live in sibling **[imp-spec](../imp-spec/)**.
+Rust implementation of the Imp DAG transmission format. Language-neutral specs live in **[imp-spec](https://github.com/silentorb/imp-spec)**.
 
 ## Crates (foundation)
 
@@ -20,7 +20,5 @@ From repo root:
 cargo test
 cargo clippy -- -D warnings
 ```
-
-In **silentorb-workbench**: `bash scripts/run-in-imp-rust.sh test` (requires Rust toolchain or the imp-rust devcontainer).
 
 See [AGENTS.md](./AGENTS.md) and [docs/rust-style.md](./docs/rust-style.md).

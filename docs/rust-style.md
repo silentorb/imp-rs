@@ -1,6 +1,6 @@
 # Rust style guide
 
-Living style for **imp-rust** crates. Adapted from [silentorb/margen `docs/rust-style.md`](https://github.com/silentorb/margen/blob/main/docs/rust-style.md) (general guidelines only).
+Living style for **imp-rs** crates. Adapted from [silentorb/margen `docs/rust-style.md`](https://github.com/silentorb/margen/blob/main/docs/rust-style.md) (general guidelines only).
 
 ## Orientation
 
@@ -63,8 +63,8 @@ If an imp-ts pattern forces awkward Rust (shared mutable eval context, polymorph
 - Cross-crate scenarios belong in the test file of the crate being verified; add `[dev-dependencies]` for helpers (e.g. `imp_registry` in library crate tests).
 - Workspace-wide smoke tests may be added under a dedicated test crate later; prefer per-crate `tests/` until then.
 
-## imp-rust specifics
+## imp-rs specifics
 
-- Spec-first: [imp-spec](../imp-spec/docs/packages/) is authoritative; imp-ts is reference when the spec is silent.
+- Spec-first: [imp-spec `docs/packages/`](https://github.com/silentorb/imp-spec/tree/main/docs/packages/) is authoritative; imp-ts is reference when the spec is silent.
 - Align public function names with imp-ts where sensible (`load_library`, `core_node_library`, …).
 - Execution API (`execute_graph`, `ExecutionHost`) lives in `imp_execution`.

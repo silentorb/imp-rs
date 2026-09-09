@@ -1,8 +1,8 @@
-# AGENTS Guide — Imp (Rust binding)
+# AGENTS Guide — Imp (Rust implementation)
 
 ## Repository purpose
 
-**Imp** is a universal transmission format for directed acyclic graphs (DAGs). This repo is the **Rust binding**. Language-neutral specs live in sibling **[imp-spec](../imp-spec/)** — read those for data model and behavior; this repo implements them.
+**Imp** is a universal transmission format for directed acyclic graphs (DAGs). This repo is the **Rust implementation**. Language-neutral specs live in **[imp-spec](https://github.com/silentorb/imp-spec)** — read those for data model and behavior; this repo implements them.
 
 | Rust crate | imp-ts package | Role |
 | --- | --- | --- |
@@ -14,13 +14,13 @@
 | `crates/imp_pathing/` | `imp-pathing` | GQL-like path operator `NodeLibrary` |
 | `crates/imp_execution/` | `imp-execution` | Runtime consumer (deferred) |
 
-**Imp Translator** specs (SQL, React Flow) and runtime docs live in [`imp-ts/docs/features/`](../imp-ts/docs/features/), not imp-spec.
+**Imp Translator** specs (SQL, React Flow) and runtime docs live in [imp-ts `docs/features/`](https://github.com/silentorb/imp-ts/tree/main/docs/features/), not imp-spec.
 
 ## Specs vs code
 
 | Layer | Location |
 | --- | --- |
-| Language-neutral specs | [`../imp-spec/docs/packages/`](../imp-spec/docs/packages/) |
+| Language-neutral specs | [imp-spec `docs/packages/`](https://github.com/silentorb/imp-spec/tree/main/docs/packages/) |
 | Rust implementation | `crates/*/src` |
 
 When specs and code disagree, update imp-spec or the code explicitly.
@@ -28,25 +28,25 @@ When specs and code disagree, update imp-spec or the code explicitly.
 ## Project context
 
 - Run from repo root: `cargo test`, `cargo clippy -- -D warnings`.
-- **Coverage:** [docs/coverage.md](./docs/coverage.md) — heuristic line targets in `coverage-targets.toml`. From silentorb-workbench: `bash scripts/coverage-imp-rust.sh --changed` after editing `src/` or `tests/`.
+- **Coverage:** [docs/coverage.md](./docs/coverage.md) — heuristic line targets in `coverage-targets.toml`. After editing `src/` or `tests/`, run coverage via `cargo llvm-cov` as documented there.
 - Tests live in `crates/<crate>/tests/` (not inline in `src/`). See [docs/rust-style.md](./docs/rust-style.md).
 - Code style: [docs/rust-style.md](./docs/rust-style.md).
-- TypeScript reference binding: [`../imp-ts/`](../imp-ts/).
+- TypeScript reference implementation: [imp-ts](https://github.com/silentorb/imp-ts).
 
 ## Feature documentation (imp-spec)
 
 | If your task involves… | Read |
 | --- | --- |
-| Core graph model | [graph-model](../imp-spec/docs/packages/imp-core-types/graph-model.md) |
-| Node type libraries | [node-libraries](../imp-spec/docs/packages/imp-core-types/node-libraries.md) |
-| Graph libraries | [graph-libraries](../imp-spec/docs/packages/imp-core-types/graph-libraries.md) |
-| Graph resolution | [resolve](../imp-spec/docs/packages/imp-graph-resolve/resolve.md) |
-| Static type checking | [type-system](../imp-spec/docs/packages/imp-typecheck/type-system.md) |
-| Registry | [registry](../imp-spec/docs/packages/imp-registry/registry.md) |
-| Collection transforms | [collection-transforms](../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) |
-| Pathing | [pathing](../imp-spec/docs/packages/imp-pathing/pathing.md) |
+| Core graph model | [graph-model](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md) |
+| Node type libraries | [node-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md) |
+| Graph libraries | [graph-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-libraries.md) |
+| Graph resolution | [resolve](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) |
+| Static type checking | [type-system](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-typecheck/type-system.md) |
+| Registry | [registry](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md) |
+| Collection transforms | [collection-transforms](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md) |
+| Pathing | [pathing](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md) |
 
-Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview/).
+Cross-package overview: [imp-spec `docs/overview/`](https://github.com/silentorb/imp-spec/tree/main/docs/overview/).
 
 ## Working conventions
 
@@ -57,10 +57,4 @@ Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview
 
 ## Versioning
 
-Cargo workspace version (`0.2.0`) aligns with imp-ts npm epoch. Version bumps for npm packages are orchestrated from **silentorb-workbench** (`bash scripts/bump-version.sh`); this repo has no npm packages.
-
-## Workbench integration
-
-In **silentorb-workbench**, this repo mounts at `.mnt/imp-rust/` (optional; host default `../imp-rust`, or `IMP_RUST_REPO`). Specs: `.mnt/imp-spec/`. Run cargo via `bash scripts/run-in-imp-rust.sh …` from the workbench root (ephemeral imp-rust Compose container when the workbench shell has no local `cargo`). Coverage: `bash scripts/coverage-imp-rust.sh`.
-
-Use the repo [`.devcontainer/`](./.devcontainer/) for a standalone Rust toolchain, or install `rustup` in the main workbench shell.
+Cargo workspace version (`0.2.0`) aligns with the imp-ts npm epoch. This repo has no npm packages.
