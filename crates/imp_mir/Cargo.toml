@@ -1,0 +1,17 @@
+[package]
+name = "imp_mir"
+description = "Mir sync fabric and Miro text-to-SQLite pull for Imp hosts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+imp_core_types.workspace = true
+thiserror.workspace = true
+# Explicit versions: aura-engine path-deps this crate and must not require these
+# keys in aura-engine's workspace.dependencies.
+rusqlite = { version = "0.32", features = ["bundled"] }
+notify = "6"
+
+[dev-dependencies]
+tempfile = "3"

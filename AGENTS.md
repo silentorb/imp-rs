@@ -13,6 +13,7 @@
 | `crates/imp_collection_transforms/` | `imp-collection-transforms` | Collection combinator `NodeLibrary` |
 | `crates/imp_pathing/` | `imp-pathing` | GQL-like path operator `NodeLibrary` |
 | `crates/imp_execution/` | `imp-execution` | Runtime consumer (deferred) |
+| `crates/imp_mir/` | — | Mir sync fabric + Miro text→SQLite→pull (see [Mir](https://github.com/silentorb/mir); not an Imp core package) |
 
 **Imp Translator** specs (SQL, React Flow) and runtime docs live in [imp-ts `docs/features/`](https://github.com/silentorb/imp-ts/tree/main/docs/features/), not imp-spec.
 
@@ -45,8 +46,9 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | Registry | [registry](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md) |
 | Collection transforms | [collection-transforms](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md) |
 | Pathing | [pathing](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md) |
+| Mir / Miro sync (`imp_mir`) | [Mir repo](https://github.com/silentorb/mir) (`docs/features/`); crate [README](./crates/imp_mir/README.md) |
 
-Cross-package overview: [imp-spec `docs/overview/`](https://github.com/silentorb/imp-spec/tree/main/docs/overview/).
+Cross-package overview: [imp-spec `docs/overview/`](https://github.com/silentorb/imp-spec/tree/main/docs/overview/). Imp **specs** must not mention Mir; `imp_mir` is a separate host binding.
 
 ## Working conventions
 
