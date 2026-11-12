@@ -12,6 +12,16 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
         id: id.into(),
         signal_type,
         default_value,
+        variadic: false,
+    }
+}
+
+fn variadic_port(id: &str, signal_type: SignalType) -> Port {
+    Port {
+        id: id.into(),
+        signal_type,
+        default_value: None,
+        variadic: true,
     }
 }
 
@@ -185,10 +195,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         implementation: None,
         id: "and".into(),
         type_params: vec![],
-        inputs: BTreeMap::from([
-            ("left".into(), port("left", boolean.clone(), None)),
-            ("right".into(), port("right", boolean.clone(), None)),
-        ]),
+        inputs: BTreeMap::from([("operands".into(), variadic_port("operands", boolean.clone()))]),
         outputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
         body: None,
         bindings: None,
@@ -199,10 +206,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         implementation: None,
         id: "or".into(),
         type_params: vec![],
-        inputs: BTreeMap::from([
-            ("left".into(), port("left", boolean.clone(), None)),
-            ("right".into(), port("right", boolean.clone(), None)),
-        ]),
+        inputs: BTreeMap::from([("operands".into(), variadic_port("operands", boolean.clone()))]),
         outputs: BTreeMap::from([("value".into(), port("value", boolean.clone(), None))]),
         body: None,
         bindings: None,

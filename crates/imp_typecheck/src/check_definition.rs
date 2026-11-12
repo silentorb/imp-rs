@@ -141,7 +141,14 @@ pub fn check_definition(
         let Some(expected_port) = definition.inputs.get(port_id) else {
             continue;
         };
-        let expected = scope_definition_port(&expected_port.signal_type, &definition.id);
+        let expected = if expected_port.variadic {
+            imp_core_types::list_of(scope_definition_port(
+                &expected_port.signal_type,
+                &definition.id,
+            ))
+        } else {
+            scope_definition_port(&expected_port.signal_type, &definition.id)
+        };
         if let Err(err) = unify(&boundary_type, &expected, &subst) {
             errors.push({
                 let mut tc_err = TypeCheckError::for_definition(definition.id.clone(), err.message);

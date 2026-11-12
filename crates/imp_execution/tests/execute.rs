@@ -55,15 +55,16 @@ fn passthrough_graph() -> Graph {
         edges: BTreeMap::from([(
             "e1".into(),
             Edge {
-                from: imp_core_types::PortReference {
+                    from: imp_core_types::PortReference {
                     node: "in".into(),
                     port: "value".into(),
                 },
-                to: imp_core_types::PortReference {
+                    to: imp_core_types::PortReference {
                     node: "out".into(),
                     port: "value".into(),
                 },
-            },
+                    order: None,
+                },
         )]),
     }
 }

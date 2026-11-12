@@ -43,6 +43,7 @@ fn identity_library() -> NodeLibrary {
                     id: "value".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
             outputs: BTreeMap::from([(
@@ -51,6 +52,7 @@ fn identity_library() -> NodeLibrary {
                     id: "value".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
         }],
@@ -104,6 +106,7 @@ fn check_graph_accepts_type_arg_that_satisfies_bound() {
                     node: "id".into(),
                     port: "value".into(),
                 },
+            order: None,
             },
         )]),
     };
@@ -146,6 +149,7 @@ fn check_graph_rejects_type_arg_that_violates_bound() {
                     node: "id".into(),
                     port: "value".into(),
                 },
+            order: None,
             },
         )]),
     };
@@ -193,6 +197,7 @@ fn check_graph_any_satisfies_bound() {
                     node: "id".into(),
                     port: "value".into(),
                 },
+            order: None,
             },
         )]),
     };
@@ -220,6 +225,7 @@ fn check_graph_reports_unknown_bound_id() {
                     id: "value".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
             outputs: BTreeMap::from([(
@@ -228,6 +234,7 @@ fn check_graph_reports_unknown_bound_id() {
                     id: "value".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
         }],
@@ -271,6 +278,7 @@ fn check_graph_reports_unknown_bound_id() {
                     node: "bad".into(),
                     port: "value".into(),
                 },
+            order: None,
             },
         )]),
     };
@@ -317,6 +325,7 @@ fn check_graph_matches_parametric_member_patterns() {
                     id: "collection".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
             outputs: BTreeMap::from([(
@@ -325,6 +334,7 @@ fn check_graph_matches_parametric_member_patterns() {
                     id: "collection".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
         }],
@@ -375,6 +385,7 @@ fn check_graph_matches_parametric_member_patterns() {
                     node: "p".into(),
                     port: "collection".into(),
                 },
+            order: None,
             },
         )]),
     };

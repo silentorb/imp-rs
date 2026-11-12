@@ -1,8 +1,8 @@
 //! Graph-backed definition validation tests.
 
 use imp_core_types::{
-    concrete_type, core_node_library, BoundaryBindings, Graph, GraphLibrary, Node, NodeDefinition,
-    Port, PortReference,
+    concrete_type, core_node_library, list_of, BoundaryBindings, Graph, GraphLibrary, Node,
+    NodeDefinition, Port, PortReference,
 };
 use imp_registry::{create_registry, load_graph_library, load_node_library};
 use imp_typecheck::{check_definition, check_graph_definitions};
@@ -19,6 +19,7 @@ fn passthrough_definition() -> NodeDefinition {
                 id: "rows".into(),
                 signal_type: concrete_type("collection", vec![]),
                 default_value: None,
+            variadic: false,
             },
         )]
         .into_iter()
@@ -29,6 +30,7 @@ fn passthrough_definition() -> NodeDefinition {
                 id: "rows".into(),
                 signal_type: concrete_type("collection", vec![]),
                 default_value: None,
+            variadic: false,
             },
         )]
         .into_iter()
@@ -71,6 +73,7 @@ fn passthrough_definition() -> NodeDefinition {
                         node: "out_rows".into(),
                         port: "value".into(),
                     },
+                order: None,
                 },
             )]
             .into_iter()
@@ -131,4 +134,72 @@ fn check_graph_definitions_reports_definition_cycle() {
 
     let errors = check_graph_definitions(&registry);
     assert!(errors.iter().any(|e| e.message.contains("definition-reference cycle")));
+}
+
+#[test]
+fn check_definition_requires_list_boundary_for_variadic_input() {
+    let definition = NodeDefinition {
+        id: "fold_ops".into(),
+        name: None,
+        type_params: vec![],
+        implementation: None,
+        inputs: [(
+            "operands".into(),
+            Port {
+                id: "operands".into(),
+                signal_type: concrete_type("boolean", vec![]),
+                default_value: None,
+                variadic: true,
+            },
+        )]
+        .into_iter()
+        .collect(),
+        outputs: [(
+            "value".into(),
+            Port {
+                id: "value".into(),
+                signal_type: concrete_type("boolean", vec![]),
+                default_value: None,
+                variadic: false,
+            },
+        )]
+        .into_iter()
+        .collect(),
+        bindings: Some(BoundaryBindings {
+            inputs: [("operands".into(), "in_ops".into())].into_iter().collect(),
+            outputs: [("value".into(), "out_val".into())].into_iter().collect(),
+        }),
+        body: Some(Graph {
+            nodes: [
+                (
+                    "in_ops".into(),
+                    Node {
+                        id: "in_ops".into(),
+                        node_type: "input".into(),
+                        type_args: vec![list_of(concrete_type("boolean", vec![]))],
+                        inputs: Default::default(),
+                    },
+                ),
+                (
+                    "out_val".into(),
+                    Node {
+                        id: "out_val".into(),
+                        node_type: "output".into(),
+                        type_args: vec![concrete_type("boolean", vec![])],
+                        inputs: Default::default(),
+                    },
+                ),
+            ]
+            .into_iter()
+            .collect(),
+            edges: Default::default(),
+        }),
+    };
+
+    let registry = load_node_library(create_registry(), core_node_library()).unwrap();
+    let errors = check_definition(&definition, &registry);
+    assert!(
+        !errors.iter().any(|e| e.node_id.as_deref() == Some("in_ops")),
+        "unexpected errors on in_ops: {errors:?}"
+    );
 }

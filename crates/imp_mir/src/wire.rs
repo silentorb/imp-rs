@@ -221,6 +221,8 @@ pub fn default_miro_graph(text_store_id: &str, sqlite_store_id: &str) -> Graph {
                 node: "projection".to_string(),
                 port: PORT_OBSERVE_IN.to_string(),
             },
+        
+        order: None,
         },
     );
     Graph { nodes, edges }

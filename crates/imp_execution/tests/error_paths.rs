@@ -79,6 +79,7 @@ fn limit_count_must_be_number() {
                         node: "limit".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -92,6 +93,7 @@ fn limit_count_must_be_number() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -142,6 +144,7 @@ fn sort_column_wire_must_resolve_to_literal() {
                         node: "sort".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -155,6 +158,7 @@ fn sort_column_wire_must_resolve_to_literal() {
                         node: "sort".into(),
                         port: "column".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -168,6 +172,7 @@ fn sort_column_wire_must_resolve_to_literal() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -239,6 +244,7 @@ fn contains_non_string_returns_false() {
                         node: "contains".into(),
                         port: "haystack".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -252,6 +258,7 @@ fn contains_non_string_returns_false() {
                         node: "contains".into(),
                         port: "needle".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -265,6 +272,7 @@ fn contains_non_string_returns_false() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -278,6 +286,7 @@ fn contains_non_string_returns_false() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -291,6 +300,7 @@ fn contains_non_string_returns_false() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -311,15 +321,16 @@ fn explicit_source_on_single_input_graph() {
         edges: BTreeMap::from([(
             "e1".into(),
             Edge {
-                from: PortReference {
+                    from: PortReference {
                     node: "in".into(),
                     port: "value".into(),
                 },
-                to: PortReference {
+                    to: PortReference {
                     node: "out".into(),
                     port: "value".into(),
                 },
-            },
+                    order: None,
+                },
         )]),
     };
     let host = ErrorPathHost {
@@ -372,6 +383,7 @@ fn traverse_invalid_edge_property_type_errors() {
                         node: "hop".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -385,6 +397,7 @@ fn traverse_invalid_edge_property_type_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -453,6 +466,7 @@ fn column_name_must_be_string() {
                         node: "eq".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -466,6 +480,7 @@ fn column_name_must_be_string() {
                         node: "eq".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -479,6 +494,7 @@ fn column_name_must_be_string() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -492,6 +508,7 @@ fn column_name_must_be_string() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -505,6 +522,7 @@ fn column_name_must_be_string() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -566,6 +584,7 @@ fn explicit_non_output_sink_evaluates_upstream_port() {
                         node: "limit".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -579,6 +598,7 @@ fn explicit_non_output_sink_evaluates_upstream_port() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -625,6 +645,7 @@ fn unknown_node_type_in_registry_errors() {
                         node: "bad".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -638,6 +659,7 @@ fn unknown_node_type_in_registry_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),

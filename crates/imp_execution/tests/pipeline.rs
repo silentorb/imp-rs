@@ -130,6 +130,7 @@ fn pipeline_graph() -> Graph {
                         node: "eq".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -143,6 +144,7 @@ fn pipeline_graph() -> Graph {
                         node: "eq".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -156,6 +158,7 @@ fn pipeline_graph() -> Graph {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -169,6 +172,7 @@ fn pipeline_graph() -> Graph {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -182,6 +186,7 @@ fn pipeline_graph() -> Graph {
                         node: "sort".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -195,6 +200,7 @@ fn pipeline_graph() -> Graph {
                         node: "limit".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -208,6 +214,7 @@ fn pipeline_graph() -> Graph {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -288,6 +295,7 @@ fn sort_direction_default_asc() {
                         node: "sort".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -301,6 +309,7 @@ fn sort_direction_default_asc() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -369,6 +378,7 @@ fn group_sorts_by_column() {
                         node: "group".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -382,6 +392,7 @@ fn group_sorts_by_column() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -444,6 +455,7 @@ fn project_columns() {
                         node: "project".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -457,6 +469,7 @@ fn project_columns() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),

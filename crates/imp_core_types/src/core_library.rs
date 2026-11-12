@@ -1,9 +1,8 @@
 //! Core boundary node types. Spec: imp-spec/docs/packages/imp-core-types/graph-model.md
 
 use crate::{
-    concrete_type, type_var, NodeDefinition, NodeLibrary, Port, Ports, PrimitiveValue, SignalType,
-    TypeParam,
-    type_param,
+    concrete_type, list_of, type_param, type_var, NodeDefinition, NodeLibrary, Port, Ports,
+    PrimitiveValue, SignalType, TypeParam,
 };
 use std::collections::BTreeMap;
 
@@ -12,6 +11,16 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
         id: id.into(),
         signal_type,
         default_value,
+        variadic: false,
+    }
+}
+
+fn variadic_port(id: &str, signal_type: SignalType) -> Port {
+    Port {
+        id: id.into(),
+        signal_type,
+        default_value: None,
+        variadic: true,
     }
 }
 
@@ -67,7 +76,17 @@ pub fn core_node_library() -> NodeLibrary {
                         port("value", any.clone(), Some(PrimitiveValue::Null)),
                     ),
                 ]),
-                outputs: BTreeMap::from([("value".into(), port("value", t, None))]),
+                outputs: BTreeMap::from([("value".into(), port("value", t.clone(), None))]),
+                body: None,
+                bindings: None,
+            },
+            NodeDefinition {
+                id: "pack".into(),
+                name: None,
+                type_params: type_param_t(),
+                implementation: None,
+                inputs: BTreeMap::from([("items".into(), variadic_port("items", t.clone()))]),
+                outputs: BTreeMap::from([("list".into(), port("list", list_of(t), None))]),
                 body: None,
                 bindings: None,
             },

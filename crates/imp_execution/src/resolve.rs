@@ -11,17 +11,13 @@ pub fn edge_target_key(node: &NodeId, port: &PortId) -> EdgeTargetKey {
     (node.clone(), port.clone())
 }
 
-pub fn index_edges_by_target(graph: &Graph) -> Result<BTreeMap<EdgeTargetKey, Edge>, ExecutionError> {
-    let mut map = BTreeMap::new();
+pub fn index_edges_by_target(
+    graph: &Graph,
+) -> Result<BTreeMap<EdgeTargetKey, Vec<Edge>>, ExecutionError> {
+    let mut map: BTreeMap<EdgeTargetKey, Vec<Edge>> = BTreeMap::new();
     for edge in graph.edges.values() {
         let key = edge_target_key(&edge.to.node, &edge.to.port);
-        if map.contains_key(&key) {
-            return Err(ExecutionError::DuplicateEdgeTarget {
-                node: edge.to.node.clone(),
-                port: edge.to.port.clone(),
-            });
-        }
-        map.insert(key, edge.clone());
+        map.entry(key).or_default().push(edge.clone());
     }
     Ok(map)
 }
@@ -94,11 +90,21 @@ pub enum ResolvedInput {
 pub fn resolve_input(
     graph: &Graph,
     registry: &Registry,
-    edges_by_target: &BTreeMap<EdgeTargetKey, Edge>,
+    edges_by_target: &BTreeMap<EdgeTargetKey, Vec<Edge>>,
     node_id: &NodeId,
     port_id: &PortId,
 ) -> Result<ResolvedInput, ExecutionError> {
-    if let Some(edge) = edges_by_target.get(&edge_target_key(node_id, port_id)) {
+    let edges = edges_by_target
+        .get(&edge_target_key(node_id, port_id))
+        .cloned()
+        .unwrap_or_default();
+    if edges.len() > 1 {
+        return Err(ExecutionError::DuplicateEdgeTarget {
+            node: node_id.clone(),
+            port: port_id.clone(),
+        });
+    }
+    if let Some(edge) = edges.first() {
         return Ok(ResolvedInput::Wire {
             from: edge.from.clone(),
         });
@@ -129,4 +135,20 @@ pub fn resolve_input(
         node: node_id.clone(),
         port: port_id.clone(),
     })
+}
+
+pub fn resolve_variadic_inputs(
+    edges_by_target: &BTreeMap<EdgeTargetKey, Vec<Edge>>,
+    node_id: &NodeId,
+    port_id: &PortId,
+) -> Vec<ResolvedInput> {
+    let mut edges = edges_by_target
+        .get(&edge_target_key(node_id, port_id))
+        .cloned()
+        .unwrap_or_default();
+    edges.sort_by_key(|e| e.order.unwrap_or(0));
+    edges
+        .into_iter()
+        .map(|edge| ResolvedInput::Wire { from: edge.from })
+        .collect()
 }

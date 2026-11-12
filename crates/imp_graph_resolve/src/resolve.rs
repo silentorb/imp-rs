@@ -125,6 +125,7 @@ fn expand_composite_instance(
             instance_id,
             edge.from.clone(),
             edge.to.clone(),
+            edge.order,
         );
     }
 
@@ -141,15 +142,23 @@ fn expand_composite_instance(
                 node: prefix_id(instance_id, &edge.to.node),
                 port: edge.to.port.clone(),
             },
+            edge.order,
         );
     }
 
+    let mut parent_inbound: BTreeMap<String, Vec<&Edge>> = BTreeMap::new();
     for edge in graph.edges.values() {
         if edge.to.node != *instance_id {
             continue;
         }
-        let input_port = &edge.to.port;
-        let boundary_id = bindings.inputs.get(input_port).ok_or_else(|| {
+        parent_inbound
+            .entry(edge.to.port.clone())
+            .or_default()
+            .push(edge);
+    }
+
+    for (input_port, inbound) in parent_inbound {
+        let boundary_id = bindings.inputs.get(&input_port).ok_or_else(|| {
             format!("Composite \"{instance_id}\" missing input binding for port \"{input_port}\"")
         })?;
         let outbound = edges_from_boundary_output(body, boundary_id);
@@ -161,18 +170,6 @@ fn expand_composite_instance(
         }
         let prefixed_boundary = prefix_id(instance_id, boundary_id);
         nodes.remove(&prefixed_boundary);
-        for body_edge in outbound {
-            push_edge(
-                &mut edges,
-                &mut edge_counter,
-                instance_id,
-                edge.from.clone(),
-                PortReference {
-                    node: prefix_id(instance_id, &body_edge.to.node),
-                    port: body_edge.to.port.clone(),
-                },
-            );
-        }
         let stale: Vec<String> = edges
             .iter()
             .filter(|(_, existing)| existing.from.node == prefixed_boundary)
@@ -180,6 +177,73 @@ fn expand_composite_instance(
             .collect();
         for id in stale {
             edges.remove(&id);
+        }
+
+        let declared = definition.inputs.get(&input_port);
+        if declared.map(|p| p.variadic).unwrap_or(false) {
+            let pack_id = prefix_id(instance_id, &format!("__pack_{input_port}"));
+            let element_type = declared.unwrap().signal_type.clone();
+            nodes.insert(
+                pack_id.clone(),
+                imp_core_types::Node {
+                    id: pack_id.clone(),
+                    node_type: "pack".into(),
+                    type_args: vec![element_type],
+                    inputs: BTreeMap::new(),
+                },
+            );
+            let mut sorted = inbound;
+            sorted.sort_by_key(|e| e.order.unwrap_or(0));
+            for edge in sorted {
+                push_edge(
+                    &mut edges,
+                    &mut edge_counter,
+                    instance_id,
+                    edge.from.clone(),
+                    PortReference {
+                        node: pack_id.clone(),
+                        port: "items".into(),
+                    },
+                    edge.order,
+                );
+            }
+            for body_edge in outbound {
+                push_edge(
+                    &mut edges,
+                    &mut edge_counter,
+                    instance_id,
+                    PortReference {
+                        node: pack_id.clone(),
+                        port: "list".into(),
+                    },
+                    PortReference {
+                        node: prefix_id(instance_id, &body_edge.to.node),
+                        port: body_edge.to.port.clone(),
+                    },
+                    None,
+                );
+            }
+        } else {
+            if inbound.len() != 1 {
+                return Err(format!(
+                    "Composite \"{instance_id}\" non-variadic input \"{input_port}\" expected one edge, got {}",
+                    inbound.len()
+                ));
+            }
+            let edge = inbound[0];
+            for body_edge in outbound {
+                push_edge(
+                    &mut edges,
+                    &mut edge_counter,
+                    instance_id,
+                    edge.from.clone(),
+                    PortReference {
+                        node: prefix_id(instance_id, &body_edge.to.node),
+                        port: body_edge.to.port.clone(),
+                    },
+                    None,
+                );
+            }
         }
     }
 
@@ -210,6 +274,7 @@ fn expand_composite_instance(
                 port: value_inbound.from.port.clone(),
             },
             edge.to.clone(),
+            edge.order,
         );
     }
 
@@ -222,10 +287,11 @@ fn push_edge(
     instance_id: &NodeId,
     from: PortReference,
     to: PortReference,
+    order: Option<i64>,
 ) {
     let id = format!("{instance_id}::edge{edge_counter}");
     *edge_counter += 1;
-    edges.insert(id, Edge { from, to });
+    edges.insert(id, Edge { from, to, order });
 }
 
 pub fn flatten_graph(graph: &Graph, registry: &Registry) -> Result<Graph, String> {

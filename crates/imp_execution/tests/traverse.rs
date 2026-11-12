@@ -91,6 +91,7 @@ fn traverse_graph() -> Graph {
                         node: "hop".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -104,6 +105,7 @@ fn traverse_graph() -> Graph {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -205,6 +207,7 @@ fn except_anti_membership() {
                         node: "except".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -218,6 +221,7 @@ fn except_anti_membership() {
                         node: "hop".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -231,6 +235,7 @@ fn except_anti_membership() {
                         node: "except".into(),
                         port: "exclude".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -244,6 +249,7 @@ fn except_anti_membership() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -312,6 +318,7 @@ fn except_exclude_unwired_errors() {
                         node: "except".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -325,6 +332,7 @@ fn except_exclude_unwired_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),

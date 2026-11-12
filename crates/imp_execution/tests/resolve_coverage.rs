@@ -118,6 +118,7 @@ fn unexpected_input_node_errors() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -131,6 +132,7 @@ fn unexpected_input_node_errors() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -144,6 +146,7 @@ fn unexpected_input_node_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -217,6 +220,7 @@ fn traverse_with_edge_property_filter() {
                         node: "hop".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -230,6 +234,7 @@ fn traverse_with_edge_property_filter() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -265,8 +270,7 @@ fn and_requires_wired_inputs() {
                     id: "and".into(),
                     node_type: "and".into(),
                     type_args: vec![],
-                    inputs: BTreeMap::from([(
-                        "left".into(),
+                    inputs: BTreeMap::from([("operands".into(),
                         PrimitiveValue::Bool(true),
                     )]),
                 },
@@ -302,6 +306,7 @@ fn and_requires_wired_inputs() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -315,6 +320,7 @@ fn and_requires_wired_inputs() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -328,6 +334,7 @@ fn and_requires_wired_inputs() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -390,6 +397,7 @@ fn unknown_port_on_node_type_errors() {
                         node: "limit".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -403,6 +411,7 @@ fn unknown_port_on_node_type_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -434,8 +443,7 @@ fn or_requires_wired_inputs() {
                     id: "or".into(),
                     node_type: "or".into(),
                     type_args: vec![],
-                    inputs: BTreeMap::from([(
-                        "left".into(),
+                    inputs: BTreeMap::from([("operands".into(),
                         PrimitiveValue::Bool(true),
                     )]),
                 },
@@ -471,6 +479,7 @@ fn or_requires_wired_inputs() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -484,6 +493,7 @@ fn or_requires_wired_inputs() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -497,6 +507,7 @@ fn or_requires_wired_inputs() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -565,6 +576,7 @@ fn not_requires_wired_input() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -578,6 +590,7 @@ fn not_requires_wired_input() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -591,6 +604,7 @@ fn not_requires_wired_input() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),

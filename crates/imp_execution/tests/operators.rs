@@ -75,6 +75,7 @@ fn offset_skips_rows() {
                         node: "offset".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -88,6 +89,7 @@ fn offset_skips_rows() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -187,6 +189,7 @@ fn parameter_node_in_filter_predicate() {
                         node: "eq".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -200,6 +203,7 @@ fn parameter_node_in_filter_predicate() {
                         node: "eq".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -213,6 +217,7 @@ fn parameter_node_in_filter_predicate() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -226,6 +231,7 @@ fn parameter_node_in_filter_predicate() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -239,6 +245,7 @@ fn parameter_node_in_filter_predicate() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -329,6 +336,7 @@ fn comparison_predicates() {
                         node: "gt".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -342,6 +350,7 @@ fn comparison_predicates() {
                         node: "gt".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -355,6 +364,7 @@ fn comparison_predicates() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -368,6 +378,7 @@ fn comparison_predicates() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -381,6 +392,7 @@ fn comparison_predicates() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -482,6 +494,7 @@ fn search_delegates_to_host_text_search() {
                         node: "search".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -495,6 +508,7 @@ fn search_delegates_to_host_text_search() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -537,15 +551,16 @@ fn rejects_missing_read_capability() {
         edges: BTreeMap::from([(
             "e1".into(),
             Edge {
-                from: imp_core_types::PortReference {
+                    from: imp_core_types::PortReference {
                     node: "in".into(),
                     port: "value".into(),
                 },
-                to: imp_core_types::PortReference {
+                    to: imp_core_types::PortReference {
                     node: "out".into(),
                     port: "value".into(),
                 },
-            },
+                    order: None,
+                },
         )]),
     };
     let host = OffsetHost { rows: vec![] };
@@ -594,6 +609,7 @@ fn duplicate_edge_target_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -607,6 +623,7 @@ fn duplicate_edge_target_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -661,6 +678,7 @@ fn unsupported_node_type_errors() {
                         node: "weird".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -674,6 +692,7 @@ fn unsupported_node_type_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -712,19 +731,261 @@ fn empty_result_has_id_column() {
         edges: BTreeMap::from([(
             "e1".into(),
             Edge {
-                from: imp_core_types::PortReference {
+                    from: imp_core_types::PortReference {
                     node: "in".into(),
                     port: "value".into(),
                 },
-                to: imp_core_types::PortReference {
+                    to: imp_core_types::PortReference {
                     node: "out".into(),
                     port: "value".into(),
                 },
-            },
+                    order: None,
+                },
         )]),
     };
     let host = OffsetHost { rows: vec![] };
     let result = execute_graph(&graph, ExecuteGraphOptions::new(&registry, &host)).unwrap();
     assert_eq!(result.columns, vec!["id"]);
+    assert!(result.rows.is_empty());
+}
+
+#[test]
+fn pack_concatenates_ordered_collection_wires() {
+    let registry = test_registry();
+    let graph = Graph {
+        nodes: BTreeMap::from([
+            (
+                "in_a".into(),
+                Node {
+                    id: "in_a".into(),
+                    node_type: "input".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+            (
+                "pack".into(),
+                Node {
+                    id: "pack".into(),
+                    node_type: "pack".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+            (
+                "out".into(),
+                Node {
+                    id: "out".into(),
+                    node_type: "output".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+        ]),
+        edges: BTreeMap::from([
+            (
+                "e1".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "in_a".into(),
+                        port: "value".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "pack".into(),
+                        port: "items".into(),
+                    },
+                    order: Some(0),
+                },
+            ),
+            (
+                "e2".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "pack".into(),
+                        port: "list".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "out".into(),
+                        port: "value".into(),
+                    },
+                    order: None,
+                },
+            ),
+        ]),
+    };
+    let host = OffsetHost {
+        rows: vec![ExecutionRow::new("A"), ExecutionRow::new("B")],
+    };
+    let mut options = ExecuteGraphOptions::new(&registry, &host);
+    options.source = Some(imp_core_types::PortReference {
+        node: "in_a".into(),
+        port: "value".into(),
+    });
+    let result = execute_graph(&graph, options).unwrap();
+    assert_eq!(result.rows.len(), 2);
+    assert_eq!(result.rows[0].get("id").and_then(|v| v.as_str()), Some("A"));
+    assert_eq!(result.rows[1].get("id").and_then(|v| v.as_str()), Some("B"));
+}
+
+#[test]
+fn nary_and_folds_operands_in_edge_order() {
+    let registry = test_registry();
+    let graph = Graph {
+        nodes: BTreeMap::from([
+            (
+                "in".into(),
+                Node {
+                    id: "in".into(),
+                    node_type: "input".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+            (
+                "t1".into(),
+                Node {
+                    id: "t1".into(),
+                    node_type: "literal".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::from([("value".into(), PrimitiveValue::Bool(true))]),
+                },
+            ),
+            (
+                "t2".into(),
+                Node {
+                    id: "t2".into(),
+                    node_type: "literal".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::from([("value".into(), PrimitiveValue::Bool(true))]),
+                },
+            ),
+            (
+                "f".into(),
+                Node {
+                    id: "f".into(),
+                    node_type: "literal".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::from([("value".into(), PrimitiveValue::Bool(false))]),
+                },
+            ),
+            (
+                "and".into(),
+                Node {
+                    id: "and".into(),
+                    node_type: "and".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+            (
+                "filter".into(),
+                Node {
+                    id: "filter".into(),
+                    node_type: "filter".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+            (
+                "out".into(),
+                Node {
+                    id: "out".into(),
+                    node_type: "output".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+        ]),
+        edges: BTreeMap::from([
+            (
+                "e_in".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "in".into(),
+                        port: "value".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "filter".into(),
+                        port: "collection".into(),
+                    },
+                    order: None,
+                },
+            ),
+            (
+                "ea".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "t1".into(),
+                        port: "value".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "and".into(),
+                        port: "operands".into(),
+                    },
+                    order: Some(0),
+                },
+            ),
+            (
+                "eb".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "f".into(),
+                        port: "value".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "and".into(),
+                        port: "operands".into(),
+                    },
+                    order: Some(1),
+                },
+            ),
+            (
+                "ec".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "t2".into(),
+                        port: "value".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "and".into(),
+                        port: "operands".into(),
+                    },
+                    order: Some(2),
+                },
+            ),
+            (
+                "ep".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "and".into(),
+                        port: "value".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "filter".into(),
+                        port: "predicate".into(),
+                    },
+                    order: None,
+                },
+            ),
+            (
+                "e_out".into(),
+                Edge {
+                    from: imp_core_types::PortReference {
+                        node: "filter".into(),
+                        port: "collection".into(),
+                    },
+                    to: imp_core_types::PortReference {
+                        node: "out".into(),
+                        port: "value".into(),
+                    },
+                    order: None,
+                },
+            ),
+        ]),
+    };
+    let host = OffsetHost {
+        rows: vec![ExecutionRow::new("keep")],
+    };
+    let result = execute_graph(&graph, ExecuteGraphOptions::new(&registry, &host)).unwrap();
     assert!(result.rows.is_empty());
 }

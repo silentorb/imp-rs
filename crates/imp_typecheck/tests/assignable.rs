@@ -121,6 +121,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                         node: "f".into(),
                         port: "collection".into(),
                     },
+                order: None,
                 },
             ),
             (
@@ -134,6 +135,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                         node: "f".into(),
                         port: "predicate".into(),
                     },
+                order: None,
                 },
             ),
         ]
@@ -188,6 +190,7 @@ fn rejects_collection_input_wired_to_list_sort_port() {
                     node: "sort".into(),
                     port: "collection".into(),
                 },
+            order: None,
             },
         )]
         .into(),

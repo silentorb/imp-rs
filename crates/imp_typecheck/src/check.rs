@@ -87,18 +87,60 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
         };
 
         for (port_id, port) in &effective.inputs {
-            let has_edge = graph
+            let inbound: Vec<_> = graph
                 .edges
-                .values()
-                .any(|edge| edge.to.node == node.id && edge.to.port == *port_id);
+                .iter()
+                .filter(|(_, edge)| edge.to.node == node.id && edge.to.port == *port_id)
+                .collect();
+            let has_edge = !inbound.is_empty();
             let has_literal = node.inputs.contains_key(port_id);
             let has_default = port.default_value.is_some();
-            if !has_edge && !has_literal && !has_default {
-                errors.push(TypeCheckError::at_port(
-                    node.id.clone(),
-                    port_id.clone(),
-                    format!("required input port \"{port_id}\" is unsatisfied"),
-                ));
+            if port.variadic {
+                if !has_edge && !has_default {
+                    errors.push(TypeCheckError::at_port(
+                        node.id.clone(),
+                        port_id.clone(),
+                        format!("required input port \"{port_id}\" is unsatisfied"),
+                    ));
+                }
+                let mut orders = std::collections::BTreeMap::<i64, String>::new();
+                for (edge_id, edge) in &inbound {
+                    match edge.order {
+                        None => errors.push(TypeCheckError::at_port(
+                            node.id.clone(),
+                            port_id.clone(),
+                            format!(
+                                "variadic input \"{port_id}\" requires Edge.order on edge \"{edge_id}\""
+                            ),
+                        )),
+                        Some(order) => {
+                            if let Some(prior) = orders.insert(order, (*edge_id).clone()) {
+                                errors.push(TypeCheckError::at_port(
+                                    node.id.clone(),
+                                    port_id.clone(),
+                                    format!(
+                                        "duplicate Edge.order {order} on variadic input \"{port_id}\" (edges \"{prior}\" and \"{edge_id}\")"
+                                    ),
+                                ));
+                            }
+                        }
+                    }
+                }
+            } else {
+                if inbound.len() > 1 {
+                    errors.push(TypeCheckError::at_port(
+                        node.id.clone(),
+                        port_id.clone(),
+                        format!("multiple edges target non-variadic input \"{port_id}\""),
+                    ));
+                }
+                if !has_edge && !has_literal && !has_default {
+                    errors.push(TypeCheckError::at_port(
+                        node.id.clone(),
+                        port_id.clone(),
+                        format!("required input port \"{port_id}\" is unsatisfied"),
+                    ));
+                }
             }
         }
     }

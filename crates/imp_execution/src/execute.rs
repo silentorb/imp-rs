@@ -88,10 +88,13 @@ pub fn execute_graph<H: ExecutionHost>(
         eval_collection_port(&ctx, &mut visiting, &sink.node, &sink.port, None)?
     } else {
         let key = (sink.node.clone(), sink.port.clone());
-        let edge = edges_by_target.get(&key).ok_or_else(|| ExecutionError::UnwiredSink {
-            node: sink.node.clone(),
-            port: sink.port.clone(),
-        })?;
+        let edge = edges_by_target
+            .get(&key)
+            .and_then(|edges| edges.first())
+            .ok_or_else(|| ExecutionError::UnwiredSink {
+                node: sink.node.clone(),
+                port: sink.port.clone(),
+            })?;
         eval_collection_port(
             &ctx,
             &mut visiting,

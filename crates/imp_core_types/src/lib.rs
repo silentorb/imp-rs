@@ -25,7 +25,7 @@ pub enum PrimitiveValue {
     Null,
 }
 
-/// One port template: identity + signal type + optional default.
+/// One port template: identity + signal type + optional default + optional variadic.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Port {
     pub id: PortId,
@@ -33,6 +33,8 @@ pub struct Port {
     pub signal_type: SignalType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_value: Option<PrimitiveValue>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub variadic: bool,
 }
 
 /// Container of port templates — used for NodeDefinition inputs/outputs.
@@ -63,6 +65,9 @@ pub struct Node {
 pub struct Edge {
     pub from: PortReference,
     pub to: PortReference,
+    /// Required and unique among edges into the same variadic target.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

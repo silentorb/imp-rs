@@ -107,6 +107,7 @@ fn contains_predicate_case_insensitive() {
                         node: "contains".into(),
                         port: "haystack".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -120,6 +121,7 @@ fn contains_predicate_case_insensitive() {
                         node: "contains".into(),
                         port: "needle".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -133,6 +135,7 @@ fn contains_predicate_case_insensitive() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -146,6 +149,7 @@ fn contains_predicate_case_insensitive() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -159,6 +163,7 @@ fn contains_predicate_case_insensitive() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -258,6 +263,7 @@ fn not_predicate_excludes_matching_rows() {
                         node: "eq".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -271,6 +277,7 @@ fn not_predicate_excludes_matching_rows() {
                         node: "eq".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -284,6 +291,7 @@ fn not_predicate_excludes_matching_rows() {
                         node: "not".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -297,6 +305,7 @@ fn not_predicate_excludes_matching_rows() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -310,6 +319,7 @@ fn not_predicate_excludes_matching_rows() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -323,6 +333,7 @@ fn not_predicate_excludes_matching_rows() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -452,6 +463,7 @@ fn and_or_predicates() {
                         node: "eq1".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -465,6 +477,7 @@ fn and_or_predicates() {
                         node: "eq1".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -478,6 +491,7 @@ fn and_or_predicates() {
                         node: "eq2".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -491,6 +505,7 @@ fn and_or_predicates() {
                         node: "eq2".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -502,8 +517,9 @@ fn and_or_predicates() {
                     },
                     to: imp_core_types::PortReference {
                         node: "and".into(),
-                        port: "left".into(),
+                        port: "operands".into(),
                     },
+                    order: Some(0),
                 },
             ),
             (
@@ -515,8 +531,9 @@ fn and_or_predicates() {
                     },
                     to: imp_core_types::PortReference {
                         node: "and".into(),
-                        port: "right".into(),
+                        port: "operands".into(),
                     },
+                    order: Some(1),
                 },
             ),
             (
@@ -530,6 +547,7 @@ fn and_or_predicates() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -543,6 +561,7 @@ fn and_or_predicates() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -556,6 +575,7 @@ fn and_or_predicates() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -632,6 +652,7 @@ fn cycle_detection() {
                         node: "limit1".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -645,6 +666,7 @@ fn cycle_detection() {
                         node: "limit2".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -658,6 +680,7 @@ fn cycle_detection() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -714,6 +737,7 @@ fn unsatisfied_limit_count() {
                         node: "limit".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -727,6 +751,7 @@ fn unsatisfied_limit_count() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -784,6 +809,7 @@ fn search_requires_text_search() {
                         node: "search".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -797,6 +823,7 @@ fn search_requires_text_search() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),

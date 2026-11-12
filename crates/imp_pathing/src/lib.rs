@@ -11,7 +11,8 @@ fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>
         id: id.into(),
         signal_type,
         default_value,
-    }
+                variadic: false,
+        }
 }
 
 /// GQL-like path operator catalog.

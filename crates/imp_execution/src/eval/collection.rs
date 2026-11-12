@@ -4,7 +4,7 @@
 use crate::error::ExecutionError;
 use crate::host::{ExecutionHost, ExecutionRow};
 use crate::resolve::{
-    require_node, resolve_input, EdgeTargetKey, ResolvedInput,
+    require_node, resolve_input, resolve_variadic_inputs, EdgeTargetKey, ResolvedInput,
 };
 use imp_core_types::{
     is_graph_backed_definition, BoundaryBindings, Graph, NodeId, PortId, PrimitiveValue,
@@ -19,14 +19,14 @@ pub struct CompositeFrame<'a> {
     pub instance_id: NodeId,
     pub bindings: BoundaryBindings,
     pub parent_graph: &'a Graph,
-    pub parent_edges: &'a BTreeMap<EdgeTargetKey, imp_core_types::Edge>,
+    pub parent_edges: &'a BTreeMap<EdgeTargetKey, Vec<imp_core_types::Edge>>,
 }
 
 pub struct EvalContext<'a, H: ExecutionHost> {
     pub graph: &'a Graph,
     pub registry: &'a Registry,
     pub host: &'a H,
-    pub edges_by_target: &'a BTreeMap<EdgeTargetKey, imp_core_types::Edge>,
+    pub edges_by_target: &'a BTreeMap<EdgeTargetKey, Vec<imp_core_types::Edge>>,
     pub source_node_id: NodeId,
     pub execution_program: Option<&'a ExecutionProgram>,
     pub composite: Option<CompositeFrame<'a>>,
@@ -243,6 +243,10 @@ fn eval_predicate_value<H: ExecutionHost>(
 ) -> Result<JsonValue, ExecutionError> {
     let node = require_node(ctx.graph, node_id)?;
     match node.node_type.as_str() {
+        "literal" | "parameter" => {
+            let value = node.inputs.get("value").cloned().unwrap_or(PrimitiveValue::Null);
+            Ok(primitive_to_json(&value))
+        }
         "equals" => {
             let left = eval_expression(ctx, visiting, node_id, &"left".into(), current_row)?;
             let right = eval_expression(ctx, visiting, node_id, &"right".into(), current_row)?;
@@ -299,56 +303,40 @@ fn eval_predicate_value<H: ExecutionHost>(
             Ok(JsonValue::Bool(result))
         }
         "and" => {
-            let left = resolve_input(
-                ctx.graph,
-                ctx.registry,
-                ctx.edges_by_target,
-                node_id,
-                &"left".into(),
-            )?;
-            let right = resolve_input(
-                ctx.graph,
-                ctx.registry,
-                ctx.edges_by_target,
-                node_id,
-                &"right".into(),
-            )?;
-            let (ResolvedInput::Wire { from: left_from }, ResolvedInput::Wire { from: right_from }) =
-                (left, right)
-            else {
+            let wires = resolve_variadic_inputs(ctx.edges_by_target, node_id, &"operands".into());
+            if wires.is_empty() {
                 return Err(ExecutionError::message(format!(
-                    "and on \"{node_id}\" requires wired boolean inputs"
+                    "and on \"{node_id}\" requires at least one operand"
                 )));
-            };
-            let left_val = eval_predicate(ctx, visiting, &left_from.node, current_row)?;
-            let right_val = eval_predicate(ctx, visiting, &right_from.node, current_row)?;
-            Ok(JsonValue::Bool(left_val && right_val))
+            }
+            let mut result = true;
+            for wire in wires {
+                let ResolvedInput::Wire { from } = wire else {
+                    return Err(ExecutionError::message(format!(
+                        "and on \"{node_id}\" requires wired boolean inputs"
+                    )));
+                };
+                result = result && eval_predicate(ctx, visiting, &from.node, current_row)?;
+            }
+            Ok(JsonValue::Bool(result))
         }
         "or" => {
-            let left = resolve_input(
-                ctx.graph,
-                ctx.registry,
-                ctx.edges_by_target,
-                node_id,
-                &"left".into(),
-            )?;
-            let right = resolve_input(
-                ctx.graph,
-                ctx.registry,
-                ctx.edges_by_target,
-                node_id,
-                &"right".into(),
-            )?;
-            let (ResolvedInput::Wire { from: left_from }, ResolvedInput::Wire { from: right_from }) =
-                (left, right)
-            else {
+            let wires = resolve_variadic_inputs(ctx.edges_by_target, node_id, &"operands".into());
+            if wires.is_empty() {
                 return Err(ExecutionError::message(format!(
-                    "or on \"{node_id}\" requires wired boolean inputs"
+                    "or on \"{node_id}\" requires at least one operand"
                 )));
-            };
-            let left_val = eval_predicate(ctx, visiting, &left_from.node, current_row)?;
-            let right_val = eval_predicate(ctx, visiting, &right_from.node, current_row)?;
-            Ok(JsonValue::Bool(left_val || right_val))
+            }
+            let mut result = false;
+            for wire in wires {
+                let ResolvedInput::Wire { from } = wire else {
+                    return Err(ExecutionError::message(format!(
+                        "or on \"{node_id}\" requires wired boolean inputs"
+                    )));
+                };
+                result = result || eval_predicate(ctx, visiting, &from.node, current_row)?;
+            }
+            Ok(JsonValue::Bool(result))
         }
         "not" => {
             let inner = resolve_input(
@@ -589,6 +577,41 @@ fn eval_collection_port_inner<H: ExecutionHost>(
         "input" => {
             if let Some(frame) = &ctx.composite {
                 if let Some(input_port) = input_port_for_bound_node(&frame.bindings, node_id) {
+                    let instance = require_node(frame.parent_graph, &frame.instance_id)?;
+                    let declared = get_node_definitions(ctx.registry, &instance.node_type)
+                        .iter()
+                        .find(|entry| entry.bindings.is_some())
+                        .and_then(|entry| entry.inputs.get(&input_port));
+                    if declared.map(|p| p.variadic).unwrap_or(false) {
+                        let wires = resolve_variadic_inputs(
+                            frame.parent_edges,
+                            &frame.instance_id,
+                            &input_port,
+                        );
+                        let parent_ctx = EvalContext {
+                            graph: frame.parent_graph,
+                            registry: ctx.registry,
+                            host: ctx.host,
+                            edges_by_target: frame.parent_edges,
+                            source_node_id: ctx.source_node_id.clone(),
+                            execution_program: ctx.execution_program,
+                            composite: None,
+                        };
+                        let mut rows = Vec::new();
+                        for wire in wires {
+                            let ResolvedInput::Wire { from } = wire else {
+                                continue;
+                            };
+                            rows.extend(eval_collection_port(
+                                &parent_ctx,
+                                visiting,
+                                &from.node,
+                                &from.port,
+                                None,
+                            )?);
+                        }
+                        return Ok(rows);
+                    }
                     return follow_collection_port_on_parent(
                         ctx,
                         visiting,
@@ -609,6 +632,28 @@ fn eval_collection_port_inner<H: ExecutionHost>(
                 )));
             }
             ctx.host.list_input_rows()
+        }
+        "pack" => {
+            if output_port != "list" {
+                return Err(ExecutionError::message(format!(
+                    "pack node \"{node_id}\" only has output port \"list\""
+                )));
+            }
+            let wires = resolve_variadic_inputs(ctx.edges_by_target, node_id, &"items".into());
+            let mut rows = Vec::new();
+            for wire in wires {
+                let ResolvedInput::Wire { from } = wire else {
+                    continue;
+                };
+                rows.extend(eval_collection_port(
+                    ctx,
+                    visiting,
+                    &from.node,
+                    &from.port,
+                    None,
+                )?);
+            }
+            Ok(rows)
         }
         "output" => {
             if output_port != "value" {

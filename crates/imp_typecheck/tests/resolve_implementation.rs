@@ -41,6 +41,7 @@ fn cast_library() -> NodeLibrary {
                     id: "value".into(),
                     signal_type: SignalType::Var { param: "T".into() },
                     default_value: None,
+                variadic: false,
                 },
             )]),
             outputs: BTreeMap::from([(
@@ -49,6 +50,7 @@ fn cast_library() -> NodeLibrary {
                     id: "value".into(),
                     signal_type: concrete_type("string", vec![]),
                     default_value: None,
+                variadic: false,
                 },
             )]),
         }],
@@ -95,6 +97,7 @@ fn resolve_implementation_uses_selected_list_overload_id() {
                     node: "f".into(),
                     port: "collection".into(),
                 },
+            order: None,
             },
         )]),
     };
@@ -145,6 +148,7 @@ fn resolve_implementation_uses_selected_set_overload_id() {
                     node: "f".into(),
                     port: "collection".into(),
                 },
+            order: None,
             },
         )]),
     };
@@ -199,6 +203,7 @@ fn resolve_implementation_dispatches_on_inferred_type_arg() {
                     node: "c".into(),
                     port: "value".into(),
                 },
+            order: None,
             },
         )]),
     };

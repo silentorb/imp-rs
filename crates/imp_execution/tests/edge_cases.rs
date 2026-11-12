@@ -127,6 +127,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "lt".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -140,6 +141,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "lt".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -153,6 +155,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "ne".into(),
                         port: "left".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -166,6 +169,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "ne".into(),
                         port: "right".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -177,8 +181,9 @@ fn less_than_and_not_equals_predicates() {
                     },
                     to: PortReference {
                         node: "or".into(),
-                        port: "left".into(),
+                        port: "operands".into(),
                     },
+                    order: Some(0),
                 },
             ),
             (
@@ -190,8 +195,9 @@ fn less_than_and_not_equals_predicates() {
                     },
                     to: PortReference {
                         node: "or".into(),
-                        port: "right".into(),
+                        port: "operands".into(),
                     },
+                    order: Some(1),
                 },
             ),
             (
@@ -205,6 +211,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "filter".into(),
                         port: "predicate".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -218,6 +225,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -231,6 +239,7 @@ fn less_than_and_not_equals_predicates() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -306,6 +315,7 @@ fn sort_nulls_last() {
                         node: "sort".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -319,6 +329,7 @@ fn sort_nulls_last() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -386,6 +397,7 @@ fn project_properties_prefix_and_is_archived() {
                         node: "project".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -399,6 +411,7 @@ fn project_properties_prefix_and_is_archived() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -464,6 +477,7 @@ fn traverse_invalid_direction_errors() {
                         node: "hop".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -477,6 +491,7 @@ fn traverse_invalid_direction_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -577,6 +592,7 @@ fn unwired_explicit_sink_errors() {
                         node: "limit".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -590,6 +606,7 @@ fn unwired_explicit_sink_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -643,15 +660,16 @@ fn explicit_sink_without_incoming_wire_errors() {
         edges: BTreeMap::from([(
             "e2".into(),
             Edge {
-                from: PortReference {
+                    from: PortReference {
                     node: "limit".into(),
                     port: "collection".into(),
                 },
-                to: PortReference {
+                    to: PortReference {
                     node: "out".into(),
                     port: "value".into(),
                 },
-            },
+                    order: None,
+                },
         )]),
     };
     let host = EdgeCaseHost {
@@ -748,6 +766,7 @@ fn sort_desc_and_traverse_direction_one() {
                         node: "sort".into(),
                         port: "column".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -761,6 +780,7 @@ fn sort_desc_and_traverse_direction_one() {
                         node: "sort".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -774,6 +794,7 @@ fn sort_desc_and_traverse_direction_one() {
                         node: "hop".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -787,6 +808,7 @@ fn sort_desc_and_traverse_direction_one() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -850,6 +872,7 @@ fn filter_predicate_must_be_wired() {
                         node: "filter".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -863,6 +886,7 @@ fn filter_predicate_must_be_wired() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
@@ -923,6 +947,7 @@ fn project_empty_columns_errors() {
                         node: "project".into(),
                         port: "collection".into(),
                     },
+                    order: None,
                 },
             ),
             (
@@ -936,6 +961,7 @@ fn project_empty_columns_errors() {
                         node: "out".into(),
                         port: "value".into(),
                     },
+                    order: None,
                 },
             ),
         ]),
