@@ -1,10 +1,12 @@
 //! Implementation resolution from type arguments.
 
 use imp_core_types::{
-    Graph, ImplementationId, NodeImplementation, NodeType, SignalType,
+    is_graph_backed_definition, Graph, ImplementationId, NodeDefinition, NodeImplementation,
+    SignalType,
 };
-use imp_registry::{get_node_type, Registry};
+use imp_registry::Registry;
 
+use crate::graph_analysis::resolve_selections;
 use crate::resolve_type_args::resolve_type_args;
 use crate::subtype::is_subtype_id;
 
@@ -14,11 +16,11 @@ pub struct ImplementationResolveError {
     pub message: String,
 }
 
-pub fn effective_node_implementation(node_type: &NodeType) -> NodeImplementation {
-    node_type
+pub fn effective_node_implementation(definition: &NodeDefinition) -> NodeImplementation {
+    definition
         .implementation
         .clone()
-        .unwrap_or_else(|| NodeImplementation::default_for(&node_type.id))
+        .unwrap_or_else(|| NodeImplementation::default_for(&definition.id))
 }
 
 pub fn signal_type_matches(pattern: &SignalType, signal_type: &SignalType) -> bool {
@@ -66,29 +68,43 @@ pub fn resolve_implementation(
         message: format!("unknown node \"{node_id}\""),
     })?;
 
-    let node_type = get_node_type(registry, &node.node_type).ok_or_else(|| {
-        ImplementationResolveError {
-            node_id: Some(node.id.clone()),
-            message: format!("unknown NodeType \"{}\"", node.node_type),
-        }
+    let selected = resolve_selections(graph, registry).selected;
+    let definition = selected.get(&node.id).ok_or_else(|| ImplementationResolveError {
+        node_id: Some(node.id.clone()),
+        message: format!(
+            "unknown or unresolved NodeDefinition \"{}\"",
+            node.node_type
+        ),
     })?;
 
-    match effective_node_implementation(node_type) {
+    if is_graph_backed_definition(definition) {
+        return Err(ImplementationResolveError {
+            node_id: Some(node.id.clone()),
+            message: format!(
+                "graph-backed definition \"{}\" has no implementation id",
+                node.node_type
+            ),
+        });
+    }
+
+    match effective_node_implementation(definition) {
         NodeImplementation::Universal { id } => Ok(id),
         NodeImplementation::Dispatch {
             param_index,
             cases,
             default,
         } => {
-            let type_args = resolve_type_args(graph, &node.id, registry).ok_or_else(|| {
-                ImplementationResolveError {
-                    node_id: Some(node.id.clone()),
-                    message: "cannot resolve type arguments for dispatched implementation".into(),
-                }
-            })?;
+            let type_args =
+                resolve_type_args(graph, &node.id, registry, Some(&selected)).ok_or_else(|| {
+                    ImplementationResolveError {
+                        node_id: Some(node.id.clone()),
+                        message: "cannot resolve type arguments for dispatched implementation"
+                            .into(),
+                    }
+                })?;
 
             let index = param_index.unwrap_or(0);
-            let selected = type_args.get(index).ok_or_else(|| ImplementationResolveError {
+            let selected_arg = type_args.get(index).ok_or_else(|| ImplementationResolveError {
                 node_id: Some(node.id.clone()),
                 message: format!(
                     "dispatch paramIndex {index} out of range ({} type args)",
@@ -97,7 +113,7 @@ pub fn resolve_implementation(
             })?;
 
             for case_entry in &cases {
-                if signal_type_matches(&case_entry.match_type, selected) {
+                if signal_type_matches(&case_entry.match_type, selected_arg) {
                     return Ok(case_entry.implementation.clone());
                 }
             }

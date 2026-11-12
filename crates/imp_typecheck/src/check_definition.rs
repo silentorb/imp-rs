@@ -2,7 +2,7 @@
 //! Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
 use imp_core_types::{is_graph_backed_definition, Graph, NodeDefinition, SignalType};
-use imp_registry::{get_node_definition, Registry};
+use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 
 use crate::check::check_graph;
 use crate::graph_analysis::{catalog_port_type, resolve_port_type, PortDirection};
@@ -134,7 +134,7 @@ pub fn check_definition(
             continue;
         }
         let Some(boundary_type) =
-            resolve_port_type(body, boundary_id, &"value".into(), registry, &subst)
+            resolve_port_type(body, boundary_id, &"value".into(), registry, &subst, None)
         else {
             continue;
         };
@@ -179,7 +179,7 @@ pub fn check_definition(
             continue;
         }
         let Some(boundary_type) =
-            catalog_port_type(boundary, registry, &"value".into(), PortDirection::Input)
+            catalog_port_type(boundary, registry, &"value".into(), PortDirection::Input, None)
         else {
             continue;
         };
@@ -208,10 +208,9 @@ pub fn check_definition(
 fn collect_definition_refs(body: &Graph, registry: &Registry) -> Vec<String> {
     let mut refs = Vec::new();
     for node in body.nodes.values() {
-        if let Some(def) = get_node_definition(registry, &node.node_type) {
-            if is_graph_backed_definition(def) {
-                refs.push(node.node_type.clone());
-            }
+        let overloads = get_node_definitions(registry, &node.node_type);
+        if overloads.iter().any(is_graph_backed_definition) {
+            refs.push(node.node_type.clone());
         }
     }
     refs
@@ -231,7 +230,7 @@ fn detect_definition_cycle(
     }
 
     visiting.insert(start_id.to_string());
-    if let Some(def) = get_node_definition(registry, start_id) {
+    for def in get_node_definitions(registry, start_id) {
         if let Some(body) = &def.body {
             for reference in collect_definition_refs(body, registry) {
                 if detect_definition_cycle(&reference, registry, visiting, visited) {
@@ -248,7 +247,7 @@ fn detect_definition_cycle(
 pub fn check_graph_definitions(registry: &Registry) -> Vec<TypeCheckError> {
     let mut errors = Vec::new();
 
-    for definition in registry.definitions.values() {
+    for definition in list_node_definitions(registry) {
         if !is_graph_backed_definition(definition) {
             continue;
         }

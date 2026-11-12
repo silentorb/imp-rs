@@ -5,5 +5,8 @@ pub fn is_subtype_id(sub_id: &str, super_id: &str) -> bool {
     if sub_id == super_id {
         return true;
     }
-    matches!((sub_id, super_id), ("list", "collection"))
+    matches!(
+        (sub_id, super_id),
+        ("list", "collection") | ("set", "collection")
+    )
 }

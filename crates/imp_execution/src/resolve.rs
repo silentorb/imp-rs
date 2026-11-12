@@ -1,8 +1,8 @@
 //! Input resolution for imp-execution (aligned with imp-sql).
 
 use crate::error::ExecutionError;
-use imp_core_types::{Edge, Graph, Node, NodeId, NodeType, PortId, PortReference, PrimitiveValue};
-use imp_registry::{get_node_type, Registry};
+use imp_core_types::{Edge, Graph, Node, NodeDefinition, NodeId, PortId, PortReference, PrimitiveValue};
+use imp_registry::{get_node_definitions, Registry};
 use std::collections::BTreeMap;
 
 pub type EdgeTargetKey = (NodeId, PortId);
@@ -33,11 +33,24 @@ pub fn require_node<'a>(graph: &'a Graph, node_id: &NodeId) -> Result<&'a Node, 
         .ok_or_else(|| ExecutionError::UnknownNode(node_id.clone()))
 }
 
+pub fn require_node_definition<'a>(
+    registry: &'a Registry,
+    type_id: &str,
+) -> Result<&'a NodeDefinition, ExecutionError> {
+    let overloads = get_node_definitions(registry, type_id);
+    if overloads.is_empty() {
+        return Err(ExecutionError::UnknownNodeType(type_id.into()));
+    }
+    // Overloads share port names/defaults; first signature is enough for defaultValue lookup.
+    Ok(&overloads[0])
+}
+
+/// Deprecated alias — prefer [`require_node_definition`].
 pub fn require_node_type<'a>(
     registry: &'a Registry,
     type_id: &str,
-) -> Result<&'a NodeType, ExecutionError> {
-    get_node_type(registry, type_id).ok_or_else(|| ExecutionError::UnknownNodeType(type_id.into()))
+) -> Result<&'a NodeDefinition, ExecutionError> {
+    require_node_definition(registry, type_id)
 }
 
 pub fn find_sole_boundary_node<'a>(graph: &'a Graph, type_id: &str) -> Result<&'a Node, ExecutionError> {

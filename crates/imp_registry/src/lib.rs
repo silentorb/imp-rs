@@ -2,8 +2,8 @@
 //! Spec: imp-spec/docs/packages/imp-registry/registry.md
 
 use imp_core_types::{
-    is_graph_backed_definition, GraphLibrary, NodeDefinition, NodeLibrary, NodeTypeId,
-    TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
+    is_concrete, is_graph_backed_definition, is_type_var, GraphLibrary, NodeDefinition, NodeLibrary,
+    NodeTypeId, Port, SignalType, TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
 };
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -13,12 +13,15 @@ pub struct Registry {
     pub libraries: Vec<NodeLibrary>,
     pub graph_libraries: Vec<GraphLibrary>,
     pub type_constraint_libraries: Vec<TypeConstraintLibrary>,
-    pub definitions: BTreeMap<NodeTypeId, NodeDefinition>,
+    /// Overload sets keyed by NodeTypeId.
+    pub definitions: BTreeMap<NodeTypeId, Vec<NodeDefinition>>,
     pub type_constraints: BTreeMap<TypeConstraintId, TypeConstraint>,
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
-#[error("NodeTypeId \"{type_id}\" is already registered (loading library \"{library_id}\")")]
+#[error(
+    "NodeTypeId \"{type_id}\" already has an equivalent overload (loading library \"{library_id}\")"
+)]
 pub struct DuplicateNodeTypeError {
     pub type_id: String,
     pub library_id: String,
@@ -60,19 +63,82 @@ pub fn create_registry() -> Registry {
     }
 }
 
+/// Canonical fingerprint for overload-signature equivalence (param ids normalized by declaration order).
+pub fn signature_fingerprint(definition: &NodeDefinition) -> String {
+    let param_index: BTreeMap<&str, usize> = definition
+        .type_params
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (p.id.as_str(), i))
+        .collect();
+
+    fn type_key(signal_type: &SignalType, param_index: &BTreeMap<&str, usize>) -> String {
+        if is_type_var(signal_type) {
+            let SignalType::Var { param } = signal_type else {
+                unreachable!()
+            };
+            return match param_index.get(param.as_str()) {
+                Some(index) => format!("#{index}"),
+                None => format!("?{param}"),
+            };
+        }
+        if !is_concrete(signal_type) {
+            return "?".into();
+        }
+        let SignalType::Concrete { id, args } = signal_type else {
+            unreachable!()
+        };
+        if args.is_empty() {
+            id.clone()
+        } else {
+            let args_key = args
+                .iter()
+                .map(|arg| type_key(arg, param_index))
+                .collect::<Vec<_>>()
+                .join(",");
+            format!("{id}<{args_key}>")
+        }
+    }
+
+    fn ports_key(ports: &BTreeMap<String, Port>, param_index: &BTreeMap<&str, usize>) -> String {
+        let mut keys: Vec<_> = ports.keys().cloned().collect();
+        keys.sort();
+        keys.into_iter()
+            .map(|id| {
+                let port = &ports[&id];
+                format!("{id}:{}", type_key(&port.signal_type, param_index))
+            })
+            .collect::<Vec<_>>()
+            .join(";")
+    }
+
+    format!(
+        "in:{{{}}}|out:{{{}}}",
+        ports_key(&definition.inputs, &param_index),
+        ports_key(&definition.outputs, &param_index)
+    )
+}
+
 fn merge_definitions(
     mut registry: Registry,
     library_id: &str,
     definitions: Vec<NodeDefinition>,
 ) -> Result<Registry, DuplicateNodeTypeError> {
     for definition in definitions {
-        if registry.definitions.contains_key(&definition.id) {
-            return Err(DuplicateNodeTypeError {
-                type_id: definition.id.clone(),
-                library_id: library_id.into(),
-            });
+        let existing = registry
+            .definitions
+            .entry(definition.id.clone())
+            .or_default();
+        let fingerprint = signature_fingerprint(&definition);
+        for prior in existing.iter() {
+            if signature_fingerprint(prior) == fingerprint {
+                return Err(DuplicateNodeTypeError {
+                    type_id: definition.id.clone(),
+                    library_id: library_id.into(),
+                });
+            }
         }
-        registry.definitions.insert(definition.id.clone(), definition);
+        existing.push(definition);
     }
     Ok(registry)
 }
@@ -150,11 +216,26 @@ pub enum RegistryError {
     InvalidGraphLibrary(#[from] InvalidGraphLibraryError),
 }
 
+/// Returns the overload set for `type_id`, or an empty slice if unknown.
+pub fn get_node_definitions<'a>(registry: &'a Registry, type_id: &str) -> &'a [NodeDefinition] {
+    registry
+        .definitions
+        .get(type_id)
+        .map(Vec::as_slice)
+        .unwrap_or(&[])
+}
+
+/// Sole-definition convenience: returns the definition when the overload set has length 1.
 pub fn get_node_definition<'a>(
     registry: &'a Registry,
     type_id: &str,
 ) -> Option<&'a NodeDefinition> {
-    registry.definitions.get(type_id)
+    let overloads = get_node_definitions(registry, type_id);
+    if overloads.len() == 1 {
+        Some(&overloads[0])
+    } else {
+        None
+    }
 }
 
 pub fn get_node_type<'a>(registry: &'a Registry, type_id: &str) -> Option<&'a NodeDefinition> {
@@ -169,7 +250,11 @@ pub fn get_type_constraint<'a>(
 }
 
 pub fn list_node_definitions(registry: &Registry) -> Vec<&NodeDefinition> {
-    registry.definitions.values().collect()
+    registry
+        .definitions
+        .values()
+        .flat_map(|overloads| overloads.iter())
+        .collect()
 }
 
 pub fn list_node_types(registry: &Registry) -> Vec<&NodeDefinition> {
@@ -193,8 +278,7 @@ pub fn list_type_constraint_libraries(registry: &Registry) -> &[TypeConstraintLi
 }
 
 pub fn has_graph_backed_definitions(registry: &Registry) -> bool {
-    registry
-        .definitions
-        .values()
+    list_node_definitions(registry)
+        .into_iter()
         .any(is_graph_backed_definition)
 }

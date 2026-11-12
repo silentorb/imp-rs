@@ -17,7 +17,11 @@ pub use assignable::assignable;
 pub use check::check_graph;
 pub use check_definition::{check_definition, check_graph_definitions};
 pub use check_type_param_bounds::check_type_param_bounds;
-pub use graph_analysis::resolve_port_type;
+pub use graph_analysis::{
+    candidate_survives, catalog_port_type, catalog_port_type_from_definition, collect_graph_substitution,
+    effective_definition, effective_node_type, resolve_port_type, resolve_selections,
+    PortDirection, ResolveSelections, SelectedDefinitions,
+};
 pub use resolve_implementation::{
     effective_node_implementation, resolve_implementation, signal_type_matches,
     ImplementationResolveError,

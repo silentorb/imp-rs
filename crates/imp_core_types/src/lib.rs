@@ -11,8 +11,8 @@ pub type SignalTypeId = String;
 
 mod signal_type;
 pub use signal_type::{
-    collection_of, concrete_type, is_concrete, is_type_var, list_of, type_param, type_var, SignalType,
-    TypeParam, TypeParamId,
+    collection_of, concrete_type, is_concrete, is_type_var, list_of, set_of, type_param, type_var,
+    SignalType, TypeParam, TypeParamId,
 };
 
 /// Literal value for instance inputs or port defaults.

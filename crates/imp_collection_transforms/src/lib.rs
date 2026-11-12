@@ -2,7 +2,7 @@
 //! Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md
 
 use imp_core_types::{
-    collection_of, concrete_type, list_of, type_param, type_var, NodeDefinition, NodeImplementation,
+    concrete_type, list_of, set_of, type_param, type_var, NodeDefinition, NodeImplementation,
     NodeLibrary, Port, Ports, PrimitiveValue, SignalType, TypeParam,
 };
 use std::collections::BTreeMap;
@@ -19,16 +19,17 @@ fn type_param_t() -> Vec<TypeParam> {
     vec![type_param("T")]
 }
 
-fn collection_t() -> SignalType {
-    collection_of(type_var("T"))
-}
-
 fn list_t() -> SignalType {
     list_of(type_var("T"))
 }
 
-fn container_preserving(
+fn set_t() -> SignalType {
+    set_of(type_var("T"))
+}
+
+fn kind_preserving(
     id: &str,
+    implementation_id: &str,
     container_type: SignalType,
     extra_inputs: Ports,
 ) -> NodeDefinition {
@@ -39,7 +40,7 @@ fn container_preserving(
         id: id.into(),
         name: None,
         type_params: type_param_t(),
-        implementation: Some(NodeImplementation::universal(id)),
+        implementation: Some(NodeImplementation::universal(implementation_id)),
         inputs,
         outputs: BTreeMap::from([(
             "collection".into(),
@@ -50,10 +51,20 @@ fn container_preserving(
     }
 }
 
+fn list_and_set_overloads(
+    id: &str,
+    extra_inputs: Ports,
+    extra_inputs_for_set: Option<Ports>,
+) -> Vec<NodeDefinition> {
+    let set_inputs = extra_inputs_for_set.unwrap_or_else(|| extra_inputs.clone());
+    vec![
+        kind_preserving(id, &format!("{id}_list"), list_t(), extra_inputs),
+        kind_preserving(id, &format!("{id}_set"), set_t(), set_inputs),
+    ]
+}
+
 /// Collection combinator and predicate catalog.
 pub fn collection_transforms_library() -> NodeLibrary {
-    let collection_t_sig = collection_t();
-    let list_t_sig = list_t();
     let boolean = concrete_type("boolean", vec![]);
     let string = concrete_type("string", vec![]);
     let number = concrete_type("number", vec![]);
@@ -61,28 +72,28 @@ pub fn collection_transforms_library() -> NodeLibrary {
 
     let mut definitions = Vec::new();
 
-    let mut add = |node_type: NodeDefinition| {
-        definitions.push(node_type);
-    };
-
-    add(container_preserving(
+    definitions.extend(list_and_set_overloads(
         "filter",
-        collection_t_sig.clone(),
         BTreeMap::from([("predicate".into(), port("predicate", boolean.clone(), None))]),
+        None,
     ));
 
-    add(container_preserving(
+    definitions.extend(list_and_set_overloads(
         "except",
-        collection_t_sig.clone(),
         BTreeMap::from([(
             "exclude".into(),
-            port("exclude", collection_t_sig.clone(), None),
+            port("exclude", list_t(), None),
         )]),
+        Some(BTreeMap::from([(
+            "exclude".into(),
+            port("exclude", set_t(), None),
+        )])),
     ));
 
-    add(container_preserving(
+    definitions.push(kind_preserving(
         "sort",
-        list_t_sig.clone(),
+        "sort",
+        list_t(),
         BTreeMap::from([
             ("column".into(), port("column", string.clone(), None)),
             (
@@ -96,27 +107,30 @@ pub fn collection_transforms_library() -> NodeLibrary {
         ]),
     ));
 
-    add(container_preserving(
+    definitions.push(kind_preserving(
         "limit",
-        list_t_sig.clone(),
+        "limit",
+        list_t(),
         BTreeMap::from([("count".into(), port("count", number.clone(), None))]),
     ));
 
-    add(container_preserving(
+    definitions.push(kind_preserving(
         "offset",
-        list_t_sig.clone(),
+        "offset",
+        list_t(),
         BTreeMap::from([("count".into(), port("count", number.clone(), None))]),
     ));
 
-    add(container_preserving(
+    definitions.extend(list_and_set_overloads(
         "project",
-        collection_t_sig,
         BTreeMap::from([("columns".into(), port("columns", string.clone(), None))]),
+        None,
     ));
 
-    add(container_preserving(
+    definitions.push(kind_preserving(
         "group",
-        list_t_sig,
+        "group",
+        list_t(),
         BTreeMap::from([
             ("column".into(), port("column", string.clone(), None)),
             (
@@ -130,13 +144,13 @@ pub fn collection_transforms_library() -> NodeLibrary {
         ]),
     ));
 
-    add(container_preserving(
+    definitions.extend(list_and_set_overloads(
         "search",
-        collection_t(),
         BTreeMap::from([("query".into(), port("query", string.clone(), None))]),
+        None,
     ));
 
-    add(NodeDefinition {
+    definitions.push(NodeDefinition {
         name: None,
         implementation: None,
         id: "contains".into(),
@@ -151,7 +165,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
     });
 
     for name in ["equals", "not_equals", "less_than", "greater_than"] {
-        add(NodeDefinition {
+        definitions.push(NodeDefinition {
             name: None,
             implementation: None,
             id: name.into(),
@@ -166,7 +180,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         });
     }
 
-    add(NodeDefinition {
+    definitions.push(NodeDefinition {
         name: None,
         implementation: None,
         id: "and".into(),
@@ -180,7 +194,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         bindings: None,
     });
 
-    add(NodeDefinition {
+    definitions.push(NodeDefinition {
         name: None,
         implementation: None,
         id: "or".into(),
@@ -194,7 +208,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         bindings: None,
     });
 
-    add(NodeDefinition {
+    definitions.push(NodeDefinition {
         name: None,
         implementation: None,
         id: "not".into(),
@@ -205,7 +219,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         bindings: None,
     });
 
-    add(NodeDefinition {
+    definitions.push(NodeDefinition {
         name: None,
         implementation: None,
         id: "column".into(),
@@ -216,7 +230,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
         bindings: None,
     });
 
-    add(NodeDefinition {
+    definitions.push(NodeDefinition {
         name: None,
         implementation: None,
         id: "literal".into(),

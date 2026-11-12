@@ -63,3 +63,7 @@ pub fn collection_of(element: SignalType) -> SignalType {
 pub fn list_of(element: SignalType) -> SignalType {
     concrete_type("list", vec![element])
 }
+
+pub fn set_of(element: SignalType) -> SignalType {
+    concrete_type("set", vec![element])
+}

@@ -90,7 +90,7 @@ fn check_definition_validates_graph_backed_library_entry() {
     )
     .unwrap();
 
-    let definition = registry.definitions.get("passthrough").unwrap();
+    let definition = &registry.definitions.get("passthrough").unwrap()[0];
     assert!(check_definition(definition, &registry).is_empty());
     assert!(check_graph_definitions(&registry).is_empty());
 }

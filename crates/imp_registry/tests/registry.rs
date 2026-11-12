@@ -1,9 +1,12 @@
 //! Registry load/lookup tests.
 
-use imp_core_types::{concrete_type, core_node_library, NodeDefinition, NodeLibrary, Port, Ports};
+use imp_core_types::{
+    concrete_type, core_node_library, list_of, set_of, type_param, type_var, NodeDefinition,
+    NodeLibrary, Port, Ports,
+};
 use imp_registry::{
-    create_registry, get_node_definition, list_libraries, list_node_definitions, load_node_library,
-    DuplicateNodeTypeError,
+    create_registry, get_node_definition, get_node_definitions, list_libraries,
+    list_node_definitions, load_node_library, DuplicateNodeTypeError,
 };
 use std::collections::BTreeMap;
 
@@ -62,7 +65,14 @@ fn conflicting_library() -> NodeLibrary {
             type_params: vec![],
             implementation: None,
             inputs: Ports::new(),
-            outputs: Ports::new(),
+            outputs: BTreeMap::from([(
+                "out".into(),
+                Port {
+                    id: "out".into(),
+                    signal_type: concrete_type("signal", vec![]),
+                    default_value: None,
+                },
+            )]),
             body: None,
             bindings: None,
         }],
@@ -92,7 +102,7 @@ fn load_node_library_merges_definitions_and_preserves_libraries_in_order() {
 }
 
 #[test]
-fn load_node_library_returns_error_on_duplicate_node_type_id() {
+fn load_node_library_returns_error_on_equivalent_overload() {
     let registry = load_node_library(create_registry(), source_library()).unwrap();
     let err = load_node_library(registry, conflicting_library()).unwrap_err();
     assert_eq!(
@@ -102,6 +112,73 @@ fn load_node_library_returns_error_on_duplicate_node_type_id() {
             library_id: "example.conflict".into(),
         }
     );
+    assert!(err
+        .to_string()
+        .contains("already has an equivalent overload"));
+}
+
+#[test]
+fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
+    let list_filter = NodeLibrary {
+        id: "example.filter-list".into(),
+        definitions: vec![NodeDefinition {
+            id: "filter".into(),
+            name: None,
+            type_params: vec![type_param("T")],
+            implementation: None,
+            inputs: BTreeMap::from([(
+                "collection".into(),
+                Port {
+                    id: "collection".into(),
+                    signal_type: list_of(type_var("T")),
+                    default_value: None,
+                },
+            )]),
+            outputs: BTreeMap::from([(
+                "collection".into(),
+                Port {
+                    id: "collection".into(),
+                    signal_type: list_of(type_var("T")),
+                    default_value: None,
+                },
+            )]),
+            body: None,
+            bindings: None,
+        }],
+    };
+    let set_filter = NodeLibrary {
+        id: "example.filter-set".into(),
+        definitions: vec![NodeDefinition {
+            id: "filter".into(),
+            name: None,
+            type_params: vec![type_param("T")],
+            implementation: None,
+            inputs: BTreeMap::from([(
+                "collection".into(),
+                Port {
+                    id: "collection".into(),
+                    signal_type: set_of(type_var("T")),
+                    default_value: None,
+                },
+            )]),
+            outputs: BTreeMap::from([(
+                "collection".into(),
+                Port {
+                    id: "collection".into(),
+                    signal_type: set_of(type_var("T")),
+                    default_value: None,
+                },
+            )]),
+            body: None,
+            bindings: None,
+        }],
+    };
+
+    let registry =
+        load_node_library(load_node_library(create_registry(), list_filter).unwrap(), set_filter)
+            .unwrap();
+    assert!(get_node_definition(&registry, "filter").is_none());
+    assert_eq!(get_node_definitions(&registry, "filter").len(), 2);
 }
 
 #[test]

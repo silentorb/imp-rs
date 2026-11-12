@@ -2,8 +2,8 @@
 
 use imp_collection_transforms::collection_transforms_library;
 use imp_core_types::{
-    collection_of, concrete_type, core_node_library, list_of, Edge, Graph, Node, PortReference,
-    PrimitiveValue,
+    collection_of, concrete_type, core_node_library, list_of, set_of, Edge, Graph, Node,
+    PortReference, PrimitiveValue,
 };
 use imp_registry::{create_registry, load_library};
 use imp_typecheck::{assignable, check_graph, signal_type_matches, unify, Substitution};
@@ -51,7 +51,27 @@ fn signal_type_matches_allows_subtype_against_supertype_pattern() {
 }
 
 #[test]
-fn accepts_list_input_wired_to_collection_filter_port() {
+fn set_is_assignable_to_collection_with_matching_args() {
+    let result = assignable(
+        &set_of(concrete_type("string", vec![])),
+        &collection_of(concrete_type("string", vec![])),
+        &Substitution::new(),
+    );
+    assert!(result.is_ok());
+}
+
+#[test]
+fn set_is_not_assignable_to_list() {
+    let result = assignable(
+        &set_of(concrete_type("string", vec![])),
+        &list_of(concrete_type("string", vec![])),
+        &Substitution::new(),
+    );
+    assert!(result.is_err());
+}
+
+#[test]
+fn accepts_list_input_wired_to_filter_list_overload() {
     let registry = load_library(
         load_library(create_registry(), core_node_library()).unwrap(),
         collection_transforms_library(),

@@ -1,10 +1,9 @@
 //! flattenGraph and buildExecutionProgram implementations.
 
 use imp_core_types::{
-    is_graph_backed_definition, Edge, Graph, NodeDefinition, NodeId, PortReference,
-    SignalType,
+    is_graph_backed_definition, Edge, Graph, NodeDefinition, NodeId, PortReference, SignalType,
 };
-use imp_registry::{get_node_definition, Registry};
+use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 use imp_typecheck::instantiate_node_definition;
 use std::collections::BTreeMap;
 
@@ -28,10 +27,17 @@ fn prefix_id(instance_id: &NodeId, inner_id: &NodeId) -> NodeId {
     format!("{instance_id}::{inner_id}")
 }
 
+fn graph_backed_definition<'a>(
+    registry: &'a Registry,
+    type_id: &str,
+) -> Option<&'a NodeDefinition> {
+    get_node_definitions(registry, type_id)
+        .iter()
+        .find(|def| is_graph_backed_definition(def))
+}
+
 fn is_composite_node(node_type: &str, registry: &Registry) -> bool {
-    get_node_definition(registry, node_type)
-        .map(is_graph_backed_definition)
-        .unwrap_or(false)
+    graph_backed_definition(registry, node_type).is_some()
 }
 
 fn find_composite_nodes(graph: &Graph, registry: &Registry) -> Vec<NodeId> {
@@ -44,7 +50,7 @@ fn find_composite_nodes(graph: &Graph, registry: &Registry) -> Vec<NodeId> {
 }
 
 fn resolve_definition(node: &imp_core_types::Node, registry: &Registry) -> Result<NodeDefinition, String> {
-    let def = get_node_definition(registry, &node.node_type).ok_or_else(|| {
+    let def = graph_backed_definition(registry, &node.node_type).ok_or_else(|| {
         format!(
             "Node \"{}\" type \"{}\" is not a graph-backed definition",
             node.id, node.node_type
@@ -250,12 +256,9 @@ pub fn build_execution_program(
     let mut subgraphs = BTreeMap::new();
 
     for node in graph.nodes.values() {
-        let Some(def) = get_node_definition(registry, &node.node_type) else {
+        let Some(def) = graph_backed_definition(registry, &node.node_type) else {
             continue;
         };
-        if !is_graph_backed_definition(def) {
-            continue;
-        }
 
         let key = subgraph_key(&def.id, Some(&node.type_args));
         if subgraphs.contains_key(&key) {
@@ -273,7 +276,7 @@ pub fn build_execution_program(
         subgraphs.insert(key, body);
     }
 
-    for definition in registry.definitions.values() {
+    for definition in list_node_definitions(registry) {
         if !is_graph_backed_definition(definition) {
             continue;
         }
@@ -291,7 +294,5 @@ pub fn build_execution_program(
 }
 
 pub fn is_graph_backed_node_type(type_id: &str, registry: &Registry) -> bool {
-    get_node_definition(registry, type_id)
-        .map(is_graph_backed_definition)
-        .unwrap_or(false)
+    graph_backed_definition(registry, type_id).is_some()
 }

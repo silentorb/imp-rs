@@ -2,8 +2,8 @@
 
 use imp_collection_transforms::collection_transforms_library;
 use imp_core_types::{
-    concrete_type, core_node_library, Edge, Graph, ImplementationCase, Node, NodeImplementation,
-    NodeLibrary, NodeType, Port, PortReference, PrimitiveValue, SignalType, TypeParam,
+    concrete_type, core_node_library, list_of, set_of, Edge, Graph, ImplementationCase, Node,
+    NodeImplementation, NodeLibrary, NodeType, Port, PortReference, SignalType, TypeParam,
 };
 use imp_registry::{create_registry, load_library};
 use imp_typecheck::{resolve_implementation, resolve_type_args};
@@ -56,7 +56,7 @@ fn cast_library() -> NodeLibrary {
 }
 
 #[test]
-fn resolve_implementation_uses_universal_default_for_filter() {
+fn resolve_implementation_uses_selected_list_overload_id() {
     let registry = load_library(
         load_library(create_registry(), core_node_library()).unwrap(),
         collection_transforms_library(),
@@ -70,7 +70,7 @@ fn resolve_implementation_uses_universal_default_for_filter() {
                 Node {
                     id: "in".into(),
                     node_type: "input".into(),
-                    type_args: vec![concrete_type("any", vec![])],
+                    type_args: vec![list_of(concrete_type("any", vec![]))],
                     inputs: BTreeMap::new(),
                 },
             ),
@@ -101,7 +101,57 @@ fn resolve_implementation_uses_universal_default_for_filter() {
 
     assert_eq!(
         resolve_implementation(&graph, "f", &registry).unwrap(),
-        "filter"
+        "filter_list"
+    );
+}
+
+#[test]
+fn resolve_implementation_uses_selected_set_overload_id() {
+    let registry = load_library(
+        load_library(create_registry(), core_node_library()).unwrap(),
+        collection_transforms_library(),
+    )
+    .unwrap();
+
+    let graph = Graph {
+        nodes: BTreeMap::from([
+            (
+                "in".into(),
+                Node {
+                    id: "in".into(),
+                    node_type: "input".into(),
+                    type_args: vec![set_of(concrete_type("any", vec![]))],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+            (
+                "f".into(),
+                Node {
+                    id: "f".into(),
+                    node_type: "filter".into(),
+                    type_args: vec![],
+                    inputs: BTreeMap::new(),
+                },
+            ),
+        ]),
+        edges: BTreeMap::from([(
+            "e1".into(),
+            Edge {
+                from: PortReference {
+                    node: "in".into(),
+                    port: "value".into(),
+                },
+                to: PortReference {
+                    node: "f".into(),
+                    port: "collection".into(),
+                },
+            },
+        )]),
+    };
+
+    assert_eq!(
+        resolve_implementation(&graph, "f", &registry).unwrap(),
+        "filter_set"
     );
 }
 
@@ -154,7 +204,7 @@ fn resolve_implementation_dispatches_on_inferred_type_arg() {
     };
 
     assert_eq!(
-        resolve_type_args(&graph, &"c".into(), &registry).unwrap(),
+        resolve_type_args(&graph, &"c".into(), &registry, None).unwrap(),
         vec![concrete_type("number", vec![])]
     );
     assert_eq!(

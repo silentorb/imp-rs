@@ -1,8 +1,9 @@
 //! Type-parameter bound checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
 use imp_core_types::{Graph, SignalType, TypeConstraint};
-use imp_registry::{get_node_type, get_type_constraint, Registry};
+use imp_registry::{get_type_constraint, Registry};
 
+use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
 use crate::resolve_implementation::signal_type_matches;
 use crate::resolve_type_args::resolve_type_args;
 use crate::substitution::{is_any_type, TypeCheckError};
@@ -17,22 +18,34 @@ fn satisfies_constraint(type_arg: &SignalType, constraint: &TypeConstraint) -> b
     })
 }
 
-pub fn check_type_param_bounds(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
+pub fn check_type_param_bounds(
+    graph: &Graph,
+    registry: &Registry,
+    selected: Option<&SelectedDefinitions>,
+) -> Vec<TypeCheckError> {
     let mut errors = Vec::new();
+    let owned;
+    let selections = match selected {
+        Some(map) => map,
+        None => {
+            owned = resolve_selections(graph, registry).selected;
+            &owned
+        }
+    };
 
     for node in graph.nodes.values() {
-        let Some(node_type) = get_node_type(registry, &node.node_type) else {
+        let Some(definition) = selections.get(&node.id) else {
             continue;
         };
-        if node_type.type_params.is_empty() {
+        if definition.type_params.is_empty() {
             continue;
         }
 
-        let Some(type_args) = resolve_type_args(graph, &node.id, registry) else {
+        let Some(type_args) = resolve_type_args(graph, &node.id, registry, Some(selections)) else {
             continue;
         };
 
-        for (index, param) in node_type.type_params.iter().enumerate() {
+        for (index, param) in definition.type_params.iter().enumerate() {
             if param.bounds.is_empty() {
                 continue;
             }

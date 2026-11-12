@@ -6,9 +6,11 @@ use crate::host::{ExecutionHost, ExecutionRow};
 use crate::resolve::{
     require_node, resolve_input, EdgeTargetKey, ResolvedInput,
 };
-use imp_core_types::{BoundaryBindings, Graph, NodeId, PortId, PrimitiveValue};
+use imp_core_types::{
+    is_graph_backed_definition, BoundaryBindings, Graph, NodeId, PortId, PrimitiveValue,
+};
 use imp_graph_resolve::{is_graph_backed_node_type, subgraph_key, ExecutionProgram};
-use imp_registry::{get_node_definition, Registry};
+use imp_registry::{get_node_definitions, Registry};
 use crate::resolve::index_edges_by_target;
 use serde_json::Value as JsonValue;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -410,9 +412,14 @@ fn eval_composite_collection_port<H: ExecutionHost>(
         )))?;
 
     let instance = require_node(ctx.graph, instance_id)?;
-    let definition = get_node_definition(ctx.registry, &instance.node_type).ok_or_else(|| {
-        ExecutionError::message(format!("Node \"{instance_id}\" is not a graph-backed definition"))
-    })?;
+    let definition = get_node_definitions(ctx.registry, &instance.node_type)
+        .iter()
+        .find(|entry| is_graph_backed_definition(entry))
+        .ok_or_else(|| {
+            ExecutionError::message(format!(
+                "Node \"{instance_id}\" is not a graph-backed definition"
+            ))
+        })?;
     let bindings = definition.bindings.as_ref().ok_or_else(|| {
         ExecutionError::message(format!("Node \"{instance_id}\" is not a graph-backed definition"))
     })?;
