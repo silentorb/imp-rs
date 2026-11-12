@@ -5,7 +5,7 @@ use imp_registry::{get_node_type, Registry};
 
 use crate::instantiate::instantiate_node_type;
 use crate::substitution::{apply_substitution, scope_signal_type, Substitution};
-use crate::unify::unify;
+use crate::assignable::assignable;
 
 pub fn effective_node_type(node: &Node, registry: &Registry) -> Option<imp_core_types::NodeType> {
     let catalog = get_node_type(registry, &node.node_type)?;
@@ -53,7 +53,7 @@ pub fn collect_graph_substitution(graph: &Graph, registry: &Registry) -> Substit
             continue;
         };
 
-        if let Ok(next) = unify(&output_type, &input_type, &subst) {
+        if let Ok(next) = assignable(&output_type, &input_type, &subst) {
             subst = next;
         }
     }
@@ -85,7 +85,7 @@ pub fn resolve_port_type(
                 if let Some(source_type) =
                     catalog_port_type(from_node, registry, &edge.from.port, PortDirection::Output)
                 {
-                    if let Ok(next) = unify(&source_type, &input_type, &local_subst) {
+                    if let Ok(next) = assignable(&source_type, &input_type, &local_subst) {
                         local_subst = next;
                         input_type = apply_substitution(&input_type, &local_subst);
                     }

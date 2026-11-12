@@ -27,9 +27,7 @@ pub fn resolve_type_args(
 
     for param in &node_type.type_params {
         let scoped = scoped_param(&node.id, &param.id);
-        let Some(bound) = subst.get(&scoped) else {
-            return None;
-        };
+        let bound = subst.get(&scoped)?;
         if matches!(bound, SignalType::Var { .. }) {
             return None;
         }

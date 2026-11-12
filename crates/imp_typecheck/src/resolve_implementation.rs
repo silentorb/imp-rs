@@ -6,6 +6,7 @@ use imp_core_types::{
 use imp_registry::{get_node_type, Registry};
 
 use crate::resolve_type_args::resolve_type_args;
+use crate::subtype::is_subtype_id;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImplementationResolveError {
@@ -41,7 +42,11 @@ pub fn signal_type_matches(pattern: &SignalType, signal_type: &SignalType) -> bo
         return true;
     }
 
-    if pattern_id != type_id || pattern_args.len() != type_args.len() {
+    if pattern_id != type_id && !is_subtype_id(type_id, pattern_id) {
+        return false;
+    }
+
+    if pattern_args.len() != type_args.len() {
         return false;
     }
 

@@ -849,7 +849,7 @@ pub fn result_from_rows(rows: &[ExecutionRow]) -> crate::host::ExecutionResult {
         }
     }
     let columns = std::iter::once("id".to_string())
-        .chain(prop_keys.into_iter())
+        .chain(prop_keys)
         .collect::<Vec<_>>();
     let out_rows = rows
         .iter()

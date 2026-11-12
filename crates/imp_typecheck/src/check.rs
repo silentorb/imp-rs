@@ -8,7 +8,8 @@ use crate::instantiate::instantiate_node_type;
 use crate::substitution::{
     apply_substitution, contains_type_var, scope_signal_type, Substitution, TypeCheckError,
 };
-use crate::unify::{format_signal_type, unify};
+use crate::assignable::assignable;
+use crate::unify::format_signal_type;
 
 fn effective_node_type(node: &Node, registry: &Registry) -> Option<NodeDefinition> {
     let catalog = get_node_definition(registry, &node.node_type)?;
@@ -63,7 +64,7 @@ pub fn resolve_port_type(
                     &edge.from.port,
                     PortDirection::Output,
                 ) {
-                    if let Ok(next) = unify(&source_type, &input_type, subst) {
+                    if let Ok(next) = assignable(&source_type, &input_type, subst) {
                         input_type = apply_substitution(&input_type, &next);
                     }
                 }
@@ -145,7 +146,7 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
             continue;
         };
 
-        match unify(&output_type, &input_type, &subst) {
+        match assignable(&output_type, &input_type, &subst) {
             Ok(next) => subst = next,
             Err(err) => errors.push(TypeCheckError::at_port(
                 edge.to.node.clone(),

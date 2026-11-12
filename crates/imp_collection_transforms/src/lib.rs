@@ -2,7 +2,7 @@
 //! Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md
 
 use imp_core_types::{
-    collection_of, concrete_type, type_param, type_var, NodeDefinition, NodeImplementation,
+    collection_of, concrete_type, list_of, type_param, type_var, NodeDefinition, NodeImplementation,
     NodeLibrary, Port, Ports, PrimitiveValue, SignalType, TypeParam,
 };
 use std::collections::BTreeMap;
@@ -23,16 +23,17 @@ fn collection_t() -> SignalType {
     collection_of(type_var("T"))
 }
 
-fn collection_in() -> Port {
-    port("collection", collection_t(), None)
+fn list_t() -> SignalType {
+    list_of(type_var("T"))
 }
 
-fn collection_out() -> Port {
-    port("collection", collection_t(), None)
-}
-
-fn collection_preserving(id: &str, extra_inputs: Ports) -> NodeDefinition {
-    let mut inputs = BTreeMap::from([("collection".into(), collection_in())]);
+fn container_preserving(
+    id: &str,
+    container_type: SignalType,
+    extra_inputs: Ports,
+) -> NodeDefinition {
+    let collection_port = port("collection", container_type.clone(), None);
+    let mut inputs = BTreeMap::from([("collection".into(), collection_port)]);
     inputs.extend(extra_inputs);
     NodeDefinition {
         id: id.into(),
@@ -40,7 +41,10 @@ fn collection_preserving(id: &str, extra_inputs: Ports) -> NodeDefinition {
         type_params: type_param_t(),
         implementation: Some(NodeImplementation::universal(id)),
         inputs,
-        outputs: BTreeMap::from([("collection".into(), collection_out())]),
+        outputs: BTreeMap::from([(
+            "collection".into(),
+            port("collection", container_type, None),
+        )]),
         body: None,
         bindings: None,
     }
@@ -49,6 +53,7 @@ fn collection_preserving(id: &str, extra_inputs: Ports) -> NodeDefinition {
 /// Collection combinator and predicate catalog.
 pub fn collection_transforms_library() -> NodeLibrary {
     let collection_t_sig = collection_t();
+    let list_t_sig = list_t();
     let boolean = concrete_type("boolean", vec![]);
     let string = concrete_type("string", vec![]);
     let number = concrete_type("number", vec![]);
@@ -60,21 +65,24 @@ pub fn collection_transforms_library() -> NodeLibrary {
         definitions.push(node_type);
     };
 
-    add(collection_preserving(
+    add(container_preserving(
         "filter",
+        collection_t_sig.clone(),
         BTreeMap::from([("predicate".into(), port("predicate", boolean.clone(), None))]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "except",
+        collection_t_sig.clone(),
         BTreeMap::from([(
             "exclude".into(),
             port("exclude", collection_t_sig.clone(), None),
         )]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "sort",
+        list_t_sig.clone(),
         BTreeMap::from([
             ("column".into(), port("column", string.clone(), None)),
             (
@@ -88,23 +96,27 @@ pub fn collection_transforms_library() -> NodeLibrary {
         ]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "limit",
+        list_t_sig.clone(),
         BTreeMap::from([("count".into(), port("count", number.clone(), None))]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "offset",
+        list_t_sig.clone(),
         BTreeMap::from([("count".into(), port("count", number.clone(), None))]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "project",
+        collection_t_sig,
         BTreeMap::from([("columns".into(), port("columns", string.clone(), None))]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "group",
+        list_t_sig,
         BTreeMap::from([
             ("column".into(), port("column", string.clone(), None)),
             (
@@ -118,8 +130,9 @@ pub fn collection_transforms_library() -> NodeLibrary {
         ]),
     ));
 
-    add(collection_preserving(
+    add(container_preserving(
         "search",
+        collection_t(),
         BTreeMap::from([("query".into(), port("query", string.clone(), None))]),
     ));
 

@@ -59,3 +59,7 @@ pub fn type_var(param: impl Into<String>) -> SignalType {
 pub fn collection_of(element: SignalType) -> SignalType {
     concrete_type("collection", vec![element])
 }
+
+pub fn list_of(element: SignalType) -> SignalType {
+    concrete_type("list", vec![element])
+}
