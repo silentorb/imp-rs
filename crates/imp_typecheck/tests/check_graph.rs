@@ -830,3 +830,83 @@ fn rejects_multiple_edges_on_non_variadic_input() {
     let errors = check_graph(&graph, &registry);
     assert!(errors.iter().any(|e| e.message.contains("non-variadic")));
 }
+
+#[test]
+fn rejects_edge_from_missing_node() {
+    let registry = transforms_registry();
+    let graph = Graph {
+        nodes: [(
+            "out".into(),
+            Node {
+                id: "out".into(),
+                title: None,
+                node_type: "output".into(),
+                type_args: vec![],
+                inputs: Default::default(),
+            },
+        )]
+        .into(),
+        edges: [(
+            "e".into(),
+            Edge {
+                from: PortReference {
+                    node: "ghost".into(),
+                    port: "value".into(),
+                },
+                to: PortReference {
+                    node: "out".into(),
+                    port: "value".into(),
+                },
+                order: None,
+            },
+        )]
+        .into(),
+    };
+    let errors = check_graph(&graph, &registry);
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.node_id.as_deref() == Some("ghost") && e.message.contains("unknown node")),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn rejects_edge_to_missing_node() {
+    let registry = transforms_registry();
+    let graph = Graph {
+        nodes: [(
+            "lit".into(),
+            Node {
+                id: "lit".into(),
+                title: None,
+                node_type: "literal".into(),
+                type_args: vec![],
+                inputs: [("value".into(), PrimitiveValue::Number(1.0))].into(),
+            },
+        )]
+        .into(),
+        edges: [(
+            "e".into(),
+            Edge {
+                from: PortReference {
+                    node: "lit".into(),
+                    port: "value".into(),
+                },
+                to: PortReference {
+                    node: "ghost".into(),
+                    port: "value".into(),
+                },
+                order: None,
+            },
+        )]
+        .into(),
+    };
+    let errors = check_graph(&graph, &registry);
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.node_id.as_deref() == Some("ghost") && e.message.contains("unknown node")),
+        "{errors:?}"
+    );
+}

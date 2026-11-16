@@ -147,9 +147,17 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
 
     for edge in graph.edges.values() {
         let Some(from_node) = graph.nodes.get(&edge.from.node) else {
+            errors.push(TypeCheckError::at_node(
+                edge.from.node.clone(),
+                format!("unknown node \"{}\"", edge.from.node),
+            ));
             continue;
         };
         let Some(to_node) = graph.nodes.get(&edge.to.node) else {
+            errors.push(TypeCheckError::at_node(
+                edge.to.node.clone(),
+                format!("unknown node \"{}\"", edge.to.node),
+            ));
             continue;
         };
 

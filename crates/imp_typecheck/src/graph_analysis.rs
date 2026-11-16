@@ -74,7 +74,10 @@ pub fn candidate_survives(
 
     for edge in graph.edges.values() {
         if edge.to.node == *node_id {
-            let from_node = graph.nodes.get(&edge.from.node)?;
+            let Some(from_node) = graph.nodes.get(&edge.from.node) else {
+                // Unresolved endpoints are reported by check_graph; skip for selection.
+                continue;
+            };
             let Some(from_def) = selected.get(&from_node.id) else {
                 continue;
             };
@@ -94,7 +97,9 @@ pub fn candidate_survives(
         }
 
         if edge.from.node == *node_id {
-            let to_node = graph.nodes.get(&edge.to.node)?;
+            let Some(to_node) = graph.nodes.get(&edge.to.node) else {
+                continue;
+            };
             let Some(to_def) = selected.get(&to_node.id) else {
                 continue;
             };
