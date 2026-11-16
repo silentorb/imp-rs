@@ -189,6 +189,7 @@ pub fn default_miro_graph(text_store_id: &str, sqlite_store_id: &str) -> Graph {
         "authoring".to_string(),
         Node {
             id: "authoring".to_string(),
+            title: None,
             node_type: MIR_SYNC_STORE.to_string(),
             type_args: Vec::new(),
             inputs: BTreeMap::from([(
@@ -201,6 +202,7 @@ pub fn default_miro_graph(text_store_id: &str, sqlite_store_id: &str) -> Graph {
         "projection".to_string(),
         Node {
             id: "projection".to_string(),
+            title: None,
             node_type: MIR_SYNC_STORE.to_string(),
             type_args: Vec::new(),
             inputs: BTreeMap::from([(

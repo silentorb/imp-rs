@@ -49,6 +49,7 @@ fn passthrough_library() -> GraphLibrary {
                         "in_rows".into(),
                         Node {
                             id: "in_rows".into(),
+                            title: None,
                             node_type: "input".into(),
                             type_args: vec![],
                             inputs: Default::default(),
@@ -58,6 +59,7 @@ fn passthrough_library() -> GraphLibrary {
                         "out_rows".into(),
                         Node {
                             id: "out_rows".into(),
+                            title: None,
                             node_type: "output".into(),
                             type_args: vec![],
                             inputs: Default::default(),
@@ -104,6 +106,7 @@ fn flatten_graph_expands_composite_instance() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -113,6 +116,7 @@ fn flatten_graph_expands_composite_instance() {
                 "comp".into(),
                 Node {
                     id: "comp".into(),
+                    title: None,
                     node_type: "passthrough".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -122,6 +126,7 @@ fn flatten_graph_expands_composite_instance() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -190,6 +195,7 @@ fn build_execution_program_deduplicates_shared_subgraphs() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -199,6 +205,7 @@ fn build_execution_program_deduplicates_shared_subgraphs() {
                 "a".into(),
                 Node {
                     id: "a".into(),
+                    title: None,
                     node_type: "passthrough".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -208,6 +215,7 @@ fn build_execution_program_deduplicates_shared_subgraphs() {
                 "b".into(),
                 Node {
                     id: "b".into(),
+                    title: None,
                     node_type: "passthrough".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -217,6 +225,7 @@ fn build_execution_program_deduplicates_shared_subgraphs() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -325,6 +334,7 @@ fn variadic_list_passthrough_library() -> GraphLibrary {
                         "in_items".into(),
                         Node {
                             id: "in_items".into(),
+                            title: None,
                             node_type: "input".into(),
                             type_args: vec![list_of(concrete_type("collection", vec![]))],
                             inputs: Default::default(),
@@ -334,6 +344,7 @@ fn variadic_list_passthrough_library() -> GraphLibrary {
                         "out_rows".into(),
                         Node {
                             id: "out_rows".into(),
+                            title: None,
                             node_type: "output".into(),
                             type_args: vec![list_of(concrete_type("collection", vec![]))],
                             inputs: Default::default(),
@@ -376,6 +387,7 @@ fn flatten_graph_inserts_pack_for_variadic_composite_input() {
                 "a".into(),
                 Node {
                     id: "a".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -385,6 +397,7 @@ fn flatten_graph_inserts_pack_for_variadic_composite_input() {
                 "b".into(),
                 Node {
                     id: "b".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -394,6 +407,7 @@ fn flatten_graph_inserts_pack_for_variadic_composite_input() {
                 "comp".into(),
                 Node {
                     id: "comp".into(),
+                    title: None,
                     node_type: "list_passthrough".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -403,6 +417,7 @@ fn flatten_graph_inserts_pack_for_variadic_composite_input() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: Default::default(),

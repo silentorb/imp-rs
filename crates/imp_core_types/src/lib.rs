@@ -49,10 +49,13 @@ pub struct PortReference {
     pub port: PortId,
 }
 
-/// Graph node instance: identity, type ref, and local input literals.
+/// Graph node instance: identity, optional display title, type ref, and local input literals.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node {
     pub id: NodeId,
+    /// Optional human-facing label; editors show this when present, else `id`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
     #[serde(rename = "type")]
     pub node_type: NodeTypeId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

@@ -34,6 +34,7 @@ fn pipeline_graph() -> Graph {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -43,6 +44,7 @@ fn pipeline_graph() -> Graph {
                 "col".into(),
                 Node {
                     id: "col".into(),
+                    title: None,
                     node_type: "column".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([(
@@ -55,6 +57,7 @@ fn pipeline_graph() -> Graph {
                 "lit".into(),
                 Node {
                     id: "lit".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([(
@@ -67,6 +70,7 @@ fn pipeline_graph() -> Graph {
                 "eq".into(),
                 Node {
                     id: "eq".into(),
+                    title: None,
                     node_type: "equals".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -76,6 +80,7 @@ fn pipeline_graph() -> Graph {
                 "filter".into(),
                 Node {
                     id: "filter".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -85,6 +90,7 @@ fn pipeline_graph() -> Graph {
                 "sort".into(),
                 Node {
                     id: "sort".into(),
+                    title: None,
                     node_type: "sort".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([
@@ -103,6 +109,7 @@ fn pipeline_graph() -> Graph {
                 "limit".into(),
                 Node {
                     id: "limit".into(),
+                    title: None,
                     node_type: "limit".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([("count".into(), PrimitiveValue::Number(10.0))]),
@@ -112,6 +119,7 @@ fn pipeline_graph() -> Graph {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -256,6 +264,7 @@ fn sort_direction_default_asc() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -265,6 +274,7 @@ fn sort_direction_default_asc() {
                 "sort".into(),
                 Node {
                     id: "sort".into(),
+                    title: None,
                     node_type: "sort".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([(
@@ -277,6 +287,7 @@ fn sort_direction_default_asc() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -333,6 +344,7 @@ fn group_sorts_by_column() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -342,6 +354,7 @@ fn group_sorts_by_column() {
                 "group".into(),
                 Node {
                     id: "group".into(),
+                    title: None,
                     node_type: "group".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([
@@ -360,6 +373,7 @@ fn group_sorts_by_column() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -416,6 +430,7 @@ fn project_columns() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -425,6 +440,7 @@ fn project_columns() {
                 "project".into(),
                 Node {
                     id: "project".into(),
+                    title: None,
                     node_type: "project".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([(
@@ -437,6 +453,7 @@ fn project_columns() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),

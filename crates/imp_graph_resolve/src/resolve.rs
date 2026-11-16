@@ -105,6 +105,7 @@ fn expand_composite_instance(
             prefixed_id.clone(),
             imp_core_types::Node {
                 id: prefixed_id,
+                title: node.title.clone(),
                 node_type: node.node_type.clone(),
                 type_args: node.type_args.clone(),
                 inputs: node.inputs.clone(),
@@ -187,6 +188,7 @@ fn expand_composite_instance(
                 pack_id.clone(),
                 imp_core_types::Node {
                     id: pack_id.clone(),
+                    title: None,
                     node_type: "pack".into(),
                     type_args: vec![element_type],
                     inputs: BTreeMap::new(),

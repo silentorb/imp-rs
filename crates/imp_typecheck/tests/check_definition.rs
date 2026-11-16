@@ -45,6 +45,7 @@ fn passthrough_definition() -> NodeDefinition {
                     "in_rows".into(),
                     Node {
                         id: "in_rows".into(),
+                        title: None,
                         node_type: "input".into(),
                         type_args: vec![concrete_type("collection", vec![])],
                         inputs: Default::default(),
@@ -54,6 +55,7 @@ fn passthrough_definition() -> NodeDefinition {
                     "out_rows".into(),
                     Node {
                         id: "out_rows".into(),
+                        title: None,
                         node_type: "output".into(),
                         type_args: vec![],
                         inputs: Default::default(),
@@ -108,6 +110,7 @@ fn check_graph_definitions_reports_definition_cycle() {
         "comp".into(),
         Node {
             id: "comp".into(),
+            title: None,
             node_type: "a".into(),
             type_args: vec![],
             inputs: Default::default(),
@@ -117,6 +120,7 @@ fn check_graph_definitions_reports_definition_cycle() {
         "comp".into(),
         Node {
             id: "comp".into(),
+            title: None,
             node_type: "b".into(),
             type_args: vec![],
             inputs: Default::default(),
@@ -175,6 +179,7 @@ fn check_definition_requires_list_boundary_for_variadic_input() {
                     "in_ops".into(),
                     Node {
                         id: "in_ops".into(),
+                        title: None,
                         node_type: "input".into(),
                         type_args: vec![list_of(concrete_type("boolean", vec![]))],
                         inputs: Default::default(),
@@ -184,6 +189,7 @@ fn check_definition_requires_list_boundary_for_variadic_input() {
                     "out_val".into(),
                     Node {
                         id: "out_val".into(),
+                        title: None,
                         node_type: "output".into(),
                         type_args: vec![concrete_type("boolean", vec![])],
                         inputs: Default::default(),

@@ -80,6 +80,7 @@ fn check_graph_accepts_type_arg_that_satisfies_bound() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type("number", vec![])],
                     inputs: BTreeMap::new(),
@@ -89,6 +90,7 @@ fn check_graph_accepts_type_arg_that_satisfies_bound() {
                 "id".into(),
                 Node {
                     id: "id".into(),
+                    title: None,
                     node_type: "identity".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -123,6 +125,7 @@ fn check_graph_rejects_type_arg_that_violates_bound() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type("boolean", vec![])],
                     inputs: BTreeMap::new(),
@@ -132,6 +135,7 @@ fn check_graph_rejects_type_arg_that_violates_bound() {
                 "id".into(),
                 Node {
                     id: "id".into(),
+                    title: None,
                     node_type: "identity".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -171,6 +175,7 @@ fn check_graph_any_satisfies_bound() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type("any", vec![])],
                     inputs: BTreeMap::new(),
@@ -180,6 +185,7 @@ fn check_graph_any_satisfies_bound() {
                 "id".into(),
                 Node {
                     id: "id".into(),
+                    title: None,
                     node_type: "identity".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -252,6 +258,7 @@ fn check_graph_reports_unknown_bound_id() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type("number", vec![])],
                     inputs: BTreeMap::new(),
@@ -261,6 +268,7 @@ fn check_graph_reports_unknown_bound_id() {
                 "bad".into(),
                 Node {
                     id: "bad".into(),
+                    title: None,
                     node_type: "bad".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -356,6 +364,7 @@ fn check_graph_matches_parametric_member_patterns() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type(
                         "collection",
@@ -368,6 +377,7 @@ fn check_graph_matches_parametric_member_patterns() {
                 "p".into(),
                 Node {
                     id: "p".into(),
+                    title: None,
                     node_type: "passthrough".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),

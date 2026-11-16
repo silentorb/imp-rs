@@ -43,6 +43,7 @@ fn no_input_boundary_node_errors() {
             "out".into(),
             Node {
                 id: "out".into(),
+                title: None,
                 node_type: "output".into(),
                 type_args: vec![],
                 inputs: BTreeMap::new(),
@@ -64,6 +65,7 @@ fn unexpected_input_node_errors() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -73,6 +75,7 @@ fn unexpected_input_node_errors() {
                 "in2".into(),
                 Node {
                     id: "in2".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -82,6 +85,7 @@ fn unexpected_input_node_errors() {
                 "lit".into(),
                 Node {
                     id: "lit".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([("value".into(), PrimitiveValue::Bool(true))]),
@@ -91,6 +95,7 @@ fn unexpected_input_node_errors() {
                 "filter".into(),
                 Node {
                     id: "filter".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -100,6 +105,7 @@ fn unexpected_input_node_errors() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -170,6 +176,7 @@ fn traverse_with_edge_property_filter() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -179,6 +186,7 @@ fn traverse_with_edge_property_filter() {
                 "hop".into(),
                 Node {
                     id: "hop".into(),
+                    title: None,
                     node_type: "traverse".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([
@@ -202,6 +210,7 @@ fn traverse_with_edge_property_filter() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -259,6 +268,7 @@ fn and_requires_wired_inputs() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -268,6 +278,7 @@ fn and_requires_wired_inputs() {
                 "and".into(),
                 Node {
                     id: "and".into(),
+                    title: None,
                     node_type: "and".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([("operands".into(),
@@ -279,6 +290,7 @@ fn and_requires_wired_inputs() {
                 "filter".into(),
                 Node {
                     id: "filter".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -288,6 +300,7 @@ fn and_requires_wired_inputs() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -358,6 +371,7 @@ fn unknown_port_on_node_type_errors() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -367,6 +381,7 @@ fn unknown_port_on_node_type_errors() {
                 "limit".into(),
                 Node {
                     id: "limit".into(),
+                    title: None,
                     node_type: "limit".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([(
@@ -379,6 +394,7 @@ fn unknown_port_on_node_type_errors() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -432,6 +448,7 @@ fn or_requires_wired_inputs() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -441,6 +458,7 @@ fn or_requires_wired_inputs() {
                 "or".into(),
                 Node {
                     id: "or".into(),
+                    title: None,
                     node_type: "or".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([("operands".into(),
@@ -452,6 +470,7 @@ fn or_requires_wired_inputs() {
                 "filter".into(),
                 Node {
                     id: "filter".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -461,6 +480,7 @@ fn or_requires_wired_inputs() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -528,6 +548,7 @@ fn not_requires_wired_input() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -537,6 +558,7 @@ fn not_requires_wired_input() {
                 "not".into(),
                 Node {
                     id: "not".into(),
+                    title: None,
                     node_type: "not".into(),
                     type_args: vec![],
                     inputs: BTreeMap::from([(
@@ -549,6 +571,7 @@ fn not_requires_wired_input() {
                 "filter".into(),
                 Node {
                     id: "filter".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -558,6 +581,7 @@ fn not_requires_wired_input() {
                 "out".into(),
                 Node {
                     id: "out".into(),
+                    title: None,
                     node_type: "output".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),

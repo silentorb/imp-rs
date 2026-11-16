@@ -26,6 +26,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![list_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -35,6 +36,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -44,6 +46,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -97,6 +100,7 @@ fn accepts_list_filter_limit_via_list_overload() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![list_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -106,6 +110,7 @@ fn accepts_list_filter_limit_via_list_overload() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -115,6 +120,7 @@ fn accepts_list_filter_limit_via_list_overload() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -124,6 +130,7 @@ fn accepts_list_filter_limit_via_list_overload() {
                 "lim".into(),
                 Node {
                     id: "lim".into(),
+                    title: None,
                     node_type: "limit".into(),
                     type_args: vec![],
                     inputs: [("count".into(), PrimitiveValue::Number(10.0))].into(),
@@ -191,6 +198,7 @@ fn rejects_set_filter_limit() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![set_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -200,6 +208,7 @@ fn rejects_set_filter_limit() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -209,6 +218,7 @@ fn rejects_set_filter_limit() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -218,6 +228,7 @@ fn rejects_set_filter_limit() {
                 "lim".into(),
                 Node {
                     id: "lim".into(),
+                    title: None,
                     node_type: "limit".into(),
                     type_args: vec![],
                     inputs: [("count".into(), PrimitiveValue::Number(10.0))].into(),
@@ -285,6 +296,7 @@ fn accepts_set_filter_project_via_set_overload() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![set_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -294,6 +306,7 @@ fn accepts_set_filter_project_via_set_overload() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -303,6 +316,7 @@ fn accepts_set_filter_project_via_set_overload() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -312,6 +326,7 @@ fn accepts_set_filter_project_via_set_overload() {
                 "p".into(),
                 Node {
                     id: "p".into(),
+                    title: None,
                     node_type: "project".into(),
                     type_args: vec![],
                     inputs: [("columns".into(), PrimitiveValue::String("id".into()))].into(),
@@ -379,6 +394,7 @@ fn rejects_collection_input_wired_to_filter() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![collection_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -388,6 +404,7 @@ fn rejects_collection_input_wired_to_filter() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -397,6 +414,7 @@ fn rejects_collection_input_wired_to_filter() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -453,6 +471,7 @@ fn reports_ambiguous_filter_when_input_is_any() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type("any", vec![])],
                     inputs: Default::default(),
@@ -462,6 +481,7 @@ fn reports_ambiguous_filter_when_input_is_any() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -471,6 +491,7 @@ fn reports_ambiguous_filter_when_input_is_any() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -526,6 +547,7 @@ fn accepts_nary_and_with_unique_edge_order() {
                 "a".into(),
                 Node {
                     id: "a".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -535,6 +557,7 @@ fn accepts_nary_and_with_unique_edge_order() {
                 "b".into(),
                 Node {
                     id: "b".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(false))].into(),
@@ -544,6 +567,7 @@ fn accepts_nary_and_with_unique_edge_order() {
                 "c".into(),
                 Node {
                     id: "c".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -553,6 +577,7 @@ fn accepts_nary_and_with_unique_edge_order() {
                 "and1".into(),
                 Node {
                     id: "and1".into(),
+                    title: None,
                     node_type: "and".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -618,6 +643,7 @@ fn rejects_missing_edge_order_on_variadic_target() {
                 "a".into(),
                 Node {
                     id: "a".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -627,6 +653,7 @@ fn rejects_missing_edge_order_on_variadic_target() {
                 "and1".into(),
                 Node {
                     id: "and1".into(),
+                    title: None,
                     node_type: "and".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -665,6 +692,7 @@ fn rejects_duplicate_edge_order_on_variadic_target() {
                 "a".into(),
                 Node {
                     id: "a".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -674,6 +702,7 @@ fn rejects_duplicate_edge_order_on_variadic_target() {
                 "b".into(),
                 Node {
                     id: "b".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(false))].into(),
@@ -683,6 +712,7 @@ fn rejects_duplicate_edge_order_on_variadic_target() {
                 "and1".into(),
                 Node {
                     id: "and1".into(),
+                    title: None,
                     node_type: "and".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -737,6 +767,7 @@ fn rejects_multiple_edges_on_non_variadic_input() {
                 "a".into(),
                 Node {
                     id: "a".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -746,6 +777,7 @@ fn rejects_multiple_edges_on_non_variadic_input() {
                 "b".into(),
                 Node {
                     id: "b".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(false))].into(),
@@ -755,6 +787,7 @@ fn rejects_multiple_edges_on_non_variadic_input() {
                 "not1".into(),
                 Node {
                     id: "not1".into(),
+                    title: None,
                     node_type: "not".into(),
                     type_args: vec![],
                     inputs: Default::default(),

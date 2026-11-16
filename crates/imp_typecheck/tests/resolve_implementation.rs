@@ -71,6 +71,7 @@ fn resolve_implementation_uses_selected_list_overload_id() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![list_of(concrete_type("any", vec![]))],
                     inputs: BTreeMap::new(),
@@ -80,6 +81,7 @@ fn resolve_implementation_uses_selected_list_overload_id() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -122,6 +124,7 @@ fn resolve_implementation_uses_selected_set_overload_id() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![set_of(concrete_type("any", vec![]))],
                     inputs: BTreeMap::new(),
@@ -131,6 +134,7 @@ fn resolve_implementation_uses_selected_set_overload_id() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),
@@ -177,6 +181,7 @@ fn resolve_implementation_dispatches_on_inferred_type_arg() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![concrete_type("number", vec![])],
                     inputs: BTreeMap::new(),
@@ -186,6 +191,7 @@ fn resolve_implementation_dispatches_on_inferred_type_arg() {
                 "c".into(),
                 Node {
                     id: "c".into(),
+                    title: None,
                     node_type: "cast".into(),
                     type_args: vec![],
                     inputs: BTreeMap::new(),

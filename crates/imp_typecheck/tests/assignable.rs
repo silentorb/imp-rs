@@ -84,6 +84,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![list_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -93,6 +94,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                 "pred".into(),
                 Node {
                     id: "pred".into(),
+                    title: None,
                     node_type: "literal".into(),
                     type_args: vec![],
                     inputs: [("value".into(), PrimitiveValue::Bool(true))].into(),
@@ -102,6 +104,7 @@ fn accepts_list_input_wired_to_filter_list_overload() {
                 "f".into(),
                 Node {
                     id: "f".into(),
+                    title: None,
                     node_type: "filter".into(),
                     type_args: vec![],
                     inputs: Default::default(),
@@ -159,6 +162,7 @@ fn rejects_collection_input_wired_to_list_sort_port() {
                 "in".into(),
                 Node {
                     id: "in".into(),
+                    title: None,
                     node_type: "input".into(),
                     type_args: vec![collection_of(concrete_type("any", vec![]))],
                     inputs: Default::default(),
@@ -168,6 +172,7 @@ fn rejects_collection_input_wired_to_list_sort_port() {
                 "sort".into(),
                 Node {
                     id: "sort".into(),
+                    title: None,
                     node_type: "sort".into(),
                     type_args: vec![],
                     inputs: [

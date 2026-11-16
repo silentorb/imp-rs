@@ -65,6 +65,7 @@ fn wire_rejects_unknown_node_type() {
         "x".to_string(),
         Node {
             id: "x".to_string(),
+            title: None,
             node_type: "not.mir".to_string(),
             type_args: Vec::new(),
             inputs: BTreeMap::from([(
