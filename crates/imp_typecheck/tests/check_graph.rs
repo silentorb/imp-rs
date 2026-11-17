@@ -3,10 +3,10 @@
 use imp_collection_transforms::collection_transforms_library;
 use imp_core_types::{
     collection_of, concrete_type, core_node_library, list_of, set_of, Edge, Graph, Node,
-    PortReference, PrimitiveValue,
+    NodeDefinition, Port, PortReference, PrimitiveValue,
 };
 use imp_registry::{create_registry, load_library};
-use imp_typecheck::check_graph;
+use imp_typecheck::{check_graph, check_graph_with_resolver, ResolvedEndpoint};
 
 fn transforms_registry() -> imp_registry::Registry {
     load_library(
@@ -903,6 +903,115 @@ fn rejects_edge_to_missing_node() {
         .into(),
     };
     let errors = check_graph(&graph, &registry);
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.node_id.as_deref() == Some("ghost") && e.message.contains("unknown node")),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn accepts_host_resolved_missing_from_endpoint() {
+    let registry = transforms_registry();
+    let graph = Graph {
+        nodes: [(
+            "out".into(),
+            Node {
+                id: "out".into(),
+                title: None,
+                node_type: "output".into(),
+                type_args: vec![],
+                inputs: Default::default(),
+            },
+        )]
+        .into(),
+        edges: [(
+            "e".into(),
+            Edge {
+                from: PortReference {
+                    node: "remote".into(),
+                    port: "value".into(),
+                },
+                to: PortReference {
+                    node: "out".into(),
+                    port: "value".into(),
+                },
+                order: None,
+            },
+        )]
+        .into(),
+    };
+    let resolver = |node_id: &String| {
+        if node_id != "remote" {
+            return None;
+        }
+        Some(ResolvedEndpoint {
+            node: Node {
+                id: "remote".into(),
+                title: None,
+                node_type: "host_remote".into(),
+                type_args: vec![],
+                inputs: Default::default(),
+            },
+            definition: NodeDefinition {
+                id: "host_remote".into(),
+                name: None,
+                type_params: vec![],
+                implementation: None,
+                inputs: Default::default(),
+                outputs: [(
+                    "value".into(),
+                    Port {
+                        id: "value".into(),
+                        signal_type: concrete_type("any", vec![]),
+                        default_value: None,
+                        variadic: false,
+                    },
+                )]
+                .into(),
+                body: None,
+                bindings: None,
+            },
+        })
+    };
+    let errors = check_graph_with_resolver(&graph, &registry, Some(&resolver));
+    assert!(errors.is_empty(), "{errors:?}");
+}
+
+#[test]
+fn rejects_host_miss_as_unknown_node() {
+    let registry = transforms_registry();
+    let graph = Graph {
+        nodes: [(
+            "out".into(),
+            Node {
+                id: "out".into(),
+                title: None,
+                node_type: "output".into(),
+                type_args: vec![],
+                inputs: Default::default(),
+            },
+        )]
+        .into(),
+        edges: [(
+            "e".into(),
+            Edge {
+                from: PortReference {
+                    node: "ghost".into(),
+                    port: "value".into(),
+                },
+                to: PortReference {
+                    node: "out".into(),
+                    port: "value".into(),
+                },
+                order: None,
+            },
+        )]
+        .into(),
+    };
+    let resolver = |_node_id: &String| None;
+    let errors = check_graph_with_resolver(&graph, &registry, Some(&resolver));
     assert!(
         errors
             .iter()

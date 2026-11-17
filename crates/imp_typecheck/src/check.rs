@@ -6,15 +6,34 @@ use imp_registry::{get_node_definitions, Registry};
 use crate::assignable::assignable;
 use crate::check_type_param_bounds::check_type_param_bounds;
 use crate::graph_analysis::{
-    candidate_survives, catalog_port_type_from_definition, effective_definition, resolve_port_type,
-    resolve_selections, PortDirection,
+    candidate_survives, catalog_port_type_from_definition, collect_host_endpoints,
+    effective_definition, lookup_node, resolve_port_type_with_host, resolve_selections_with_host,
+    PortDirection, HostEndpoints,
 };
+use crate::node_resolver::NodeResolver;
 use crate::substitution::{contains_type_var, TypeCheckError};
 use crate::unify::format_signal_type;
 
 pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
+    check_graph_with_resolver(graph, registry, None)
+}
+
+pub fn check_graph_with_resolver(
+    graph: &Graph,
+    registry: &Registry,
+    resolver: Option<&dyn NodeResolver>,
+) -> Vec<TypeCheckError> {
+    let host = collect_host_endpoints(graph, resolver);
+    check_graph_with_host(graph, registry, &host)
+}
+
+fn check_graph_with_host(
+    graph: &Graph,
+    registry: &Registry,
+    host: &HostEndpoints,
+) -> Vec<TypeCheckError> {
     let mut errors = Vec::new();
-    let resolved = resolve_selections(graph, registry);
+    let resolved = resolve_selections_with_host(graph, registry, host);
     let selected = resolved.selected;
     let mut edge_subst = resolved.subst;
     let unknown_types = resolved.unknown_types;
@@ -49,6 +68,7 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
                         registry,
                         &selected,
                         &edge_subst,
+                        host,
                     )
                     .is_some()
                 })
@@ -146,14 +166,14 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
     }
 
     for edge in graph.edges.values() {
-        let Some(from_node) = graph.nodes.get(&edge.from.node) else {
+        let Some(from_node) = lookup_node(graph, host, &edge.from.node) else {
             errors.push(TypeCheckError::at_node(
                 edge.from.node.clone(),
                 format!("unknown node \"{}\"", edge.from.node),
             ));
             continue;
         };
-        let Some(to_node) = graph.nodes.get(&edge.to.node) else {
+        let Some(to_node) = lookup_node(graph, host, &edge.to.node) else {
             errors.push(TypeCheckError::at_node(
                 edge.to.node.clone(),
                 format!("unknown node \"{}\"", edge.to.node),
@@ -211,9 +231,15 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
         };
 
         for port_id in definition.outputs.keys() {
-            if let Some(resolved) =
-                resolve_port_type(graph, &node.id, port_id, registry, &edge_subst, Some(&selected))
-            {
+            if let Some(resolved) = resolve_port_type_with_host(
+                graph,
+                &node.id,
+                port_id,
+                registry,
+                &edge_subst,
+                Some(&selected),
+                host,
+            ) {
                 if contains_type_var(&resolved) {
                     errors.push(TypeCheckError::at_port(
                         node.id.clone(),
@@ -235,9 +261,15 @@ pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
             if !has_edge {
                 continue;
             }
-            if let Some(resolved) =
-                resolve_port_type(graph, &node.id, port_id, registry, &edge_subst, Some(&selected))
-            {
+            if let Some(resolved) = resolve_port_type_with_host(
+                graph,
+                &node.id,
+                port_id,
+                registry,
+                &edge_subst,
+                Some(&selected),
+                host,
+            ) {
                 if contains_type_var(&resolved) {
                     errors.push(TypeCheckError::at_port(
                         node.id.clone(),
