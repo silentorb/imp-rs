@@ -1,4 +1,4 @@
-//! Text-file observe source for Miro authoring trees.
+//! Text-file observe source for Miro-profile authoring trees.
 
 use crate::signal::{ChangeKind, IncrementalChange, RecordId, SyncScope, SyncSignal};
 use crate::store::{Store, StoreCapabilities, StoreError, StoreRecord};

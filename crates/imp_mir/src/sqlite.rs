@@ -1,4 +1,4 @@
-//! SQLite derived projection store for Miro.
+//! SQLite derived projection store (Miro profile).
 
 use crate::signal::{ChangeKind, SyncScope, SyncSignal};
 use crate::store::{Store, StoreCapabilities, StoreError, StoreRecord};

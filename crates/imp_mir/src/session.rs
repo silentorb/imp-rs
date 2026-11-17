@@ -1,10 +1,10 @@
-//! MiroSession: text → SQLite wire-up, cold sync, steady watch, pull.
+//! Session: text → SQLite wire-up, cold sync, steady watch, pull (Miro profile).
 
 use crate::signal::SyncSignal;
 use crate::sqlite::SqliteStore;
 use crate::store::{Store, StoreError, StoreRecord, StoreRegistry};
 use crate::text_file::{unknown_kind_fn, KindFn, TextFileStore};
-use crate::wire::{default_miro_graph, wire_sync_graph, ObserveEdge, WiredSync, WireError};
+use crate::wire::{default_sync_graph, wire_sync_graph, ObserveEdge, WiredSync, WireError};
 use imp_core_types::Graph;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -13,7 +13,7 @@ pub const DEFAULT_TEXT_STORE_ID: &str = "authoring";
 pub const DEFAULT_SQLITE_STORE_ID: &str = "projection";
 
 #[derive(Debug, Error)]
-pub enum MiroError {
+pub enum SessionError {
     #[error("{0}")]
     Store(#[from] StoreError),
     #[error("{0}")]
@@ -22,17 +22,17 @@ pub enum MiroError {
     Message(String),
 }
 
-/// Options for opening a Miro text → SQLite session.
-pub struct MiroOpenOptions {
+/// Options for opening a text → SQLite session (Miro profile).
+pub struct OpenOptions {
     pub content_root: PathBuf,
     pub sqlite_path: PathBuf,
     pub kind_fn: KindFn,
-    /// When `None`, use [`default_miro_graph`].
+    /// When `None`, use [`default_sync_graph`].
     pub sync_graph: Option<Graph>,
     pub start_watch: bool,
 }
 
-impl MiroOpenOptions {
+impl OpenOptions {
     pub fn new(content_root: impl Into<PathBuf>, sqlite_path: impl Into<PathBuf>) -> Self {
         Self {
             content_root: content_root.into(),
@@ -59,17 +59,17 @@ impl MiroOpenOptions {
     }
 }
 
-/// Running Miro session: authoring text store observing into SQLite projection.
-pub struct MiroSession {
+/// Running session: authoring text store observing into SQLite projection.
+pub struct Session {
     text: TextFileStore,
     sqlite: SqliteStore,
     wired: WiredSync,
     query_store_id: String,
 }
 
-impl MiroSession {
+impl Session {
     /// Open stores, wire sync graph, optionally start FS watch, run cold `full` sync.
-    pub fn open(options: MiroOpenOptions) -> Result<Self, MiroError> {
+    pub fn open(options: OpenOptions) -> Result<Self, SessionError> {
         let mut text = TextFileStore::open(
             DEFAULT_TEXT_STORE_ID,
             options.content_root,
@@ -78,11 +78,11 @@ impl MiroSession {
         let sqlite = SqliteStore::open(DEFAULT_SQLITE_STORE_ID, &options.sqlite_path)?;
 
         let mut registry = StoreRegistry::new();
-        // Temporary boxes only for capability validation — we move stores into Self after.
+        // Temporary boxes only for wire-up capability validation — we move stores into Self after.
         // Validate against standalone capability snapshots instead.
         let graph = options
             .sync_graph
-            .unwrap_or_else(|| default_miro_graph(DEFAULT_TEXT_STORE_ID, DEFAULT_SQLITE_STORE_ID));
+            .unwrap_or_else(|| default_sync_graph(DEFAULT_TEXT_STORE_ID, DEFAULT_SQLITE_STORE_ID));
 
         // Build a validation registry with the same store ids/capabilities.
         registry.insert(Box::new(CapabilityProbe {
@@ -115,7 +115,7 @@ impl MiroSession {
         content_root: impl Into<PathBuf>,
         kind_fn: KindFn,
         start_watch: bool,
-    ) -> Result<Self, MiroError> {
+    ) -> Result<Self, SessionError> {
         let mut text = TextFileStore::open(DEFAULT_TEXT_STORE_ID, content_root, kind_fn)?;
         let sqlite = SqliteStore::open_in_memory(DEFAULT_SQLITE_STORE_ID)?;
         let mut registry = StoreRegistry::new();
@@ -127,7 +127,7 @@ impl MiroSession {
             id: DEFAULT_SQLITE_STORE_ID.to_string(),
             caps: sqlite.capabilities(),
         }));
-        let graph = default_miro_graph(DEFAULT_TEXT_STORE_ID, DEFAULT_SQLITE_STORE_ID);
+        let graph = default_sync_graph(DEFAULT_TEXT_STORE_ID, DEFAULT_SQLITE_STORE_ID);
         let wired = wire_sync_graph(&graph, &registry)?;
         if start_watch {
             text.start_watch()?;
@@ -155,7 +155,7 @@ impl MiroSession {
     }
 
     /// Cold full sync from text source(s) into sinks along wired edges.
-    pub fn cold_sync(&mut self) -> Result<(), MiroError> {
+    pub fn cold_sync(&mut self) -> Result<(), SessionError> {
         // Collect unique source store ids that observe into sinks.
         let sources: Vec<String> = self
             .wired
@@ -173,7 +173,7 @@ impl MiroSession {
     }
 
     /// Drain FS watch events and apply incremental signals.
-    pub fn poll_watch(&mut self) -> Result<usize, MiroError> {
+    pub fn poll_watch(&mut self) -> Result<usize, SessionError> {
         let Some(signal) = self.text.drain_watch_signal()? else {
             return Ok(0);
         };
@@ -182,11 +182,11 @@ impl MiroSession {
     }
 
     /// Pull an opaque record from the designated query store (SQLite).
-    pub fn pull_record(&self, id: &str) -> Result<Option<StoreRecord>, MiroError> {
+    pub fn pull_record(&self, id: &str) -> Result<Option<StoreRecord>, SessionError> {
         Ok(self.sqlite.pull_record(id)?)
     }
 
-    fn dispatch(&mut self, signal: &SyncSignal) -> Result<(), MiroError> {
+    fn dispatch(&mut self, signal: &SyncSignal) -> Result<(), SessionError> {
         let edges: Vec<ObserveEdge> = self
             .wired
             .edges
@@ -198,7 +198,7 @@ impl MiroSession {
             let records = if edge.source_store_id == self.text.store_id() {
                 self.text.read_for_signal(signal)?
             } else {
-                return Err(MiroError::Message(format!(
+                return Err(SessionError::Message(format!(
                     "unsupported source store `{}`",
                     edge.source_store_id
                 )));
@@ -206,7 +206,7 @@ impl MiroSession {
             if edge.sink_store_id == self.sqlite.store_id() {
                 self.sqlite.apply(signal, &records)?;
             } else {
-                return Err(MiroError::Message(format!(
+                return Err(SessionError::Message(format!(
                     "unsupported sink store `{}`",
                     edge.sink_store_id
                 )));

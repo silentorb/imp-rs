@@ -1,7 +1,7 @@
 use imp_core_types::{Graph, Node, PrimitiveValue};
 use imp_mir::{
-    default_miro_graph, unknown_kind_fn, wire_sync_graph, MiroOpenOptions, MiroSession,
-    StoreRegistry, WireError, MIR_SYNC_STORE, PORT_STORE_ID,
+    default_sync_graph, unknown_kind_fn, wire_sync_graph, OpenOptions, Session, StoreRegistry,
+    WireError, MIR_SYNC_STORE, PORT_STORE_ID,
 };
 use std::collections::BTreeMap;
 use std::fs;
@@ -35,7 +35,7 @@ fn cold_sync_and_pull_round_trip() {
     fs::write(root.join("notes.txt"), "hello").expect("write");
 
     let kind_fn = Arc::new(kind_from_aura_json);
-    let session = MiroSession::open_in_memory(root, kind_fn, false).expect("open session");
+    let session = Session::open_in_memory(root, kind_fn, false).expect("open session");
 
     let demo = session
         .pull_record("demo.json")
@@ -83,8 +83,8 @@ fn wire_rejects_unknown_node_type() {
 }
 
 #[test]
-fn default_miro_graph_wires() {
-    let graph = default_miro_graph("authoring", "projection");
+fn default_sync_graph_wires() {
+    let graph = default_sync_graph("authoring", "projection");
     assert_eq!(graph.nodes.len(), 2);
     assert_eq!(graph.nodes["authoring"].node_type, MIR_SYNC_STORE);
     let _ = unknown_kind_fn();
@@ -98,8 +98,8 @@ fn open_options_file_db() {
     fs::write(root.join("a.json"), r#"{"type":"notation"}"#).expect("write");
     let db = dir.path().join("proj.db");
 
-    let session = MiroSession::open(
-        MiroOpenOptions::new(&root, &db)
+    let session = Session::open(
+        OpenOptions::new(&root, &db)
             .with_kind_fn(Arc::new(kind_from_aura_json))
             .with_start_watch(false),
     )

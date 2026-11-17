@@ -10,7 +10,7 @@ Language-neutral requirements live in the Mir repo (`docs/features/imp-sync-wiri
 - `SyncSignal` with full / incremental / content scopes
 - Boot-only wire-up for `mir.sync.store` (file-tree observe)
 - Generic text-file store + SQLite projection store
-- `MiroSession`: default text → SQLite, cold `full` sync, steady file watch, opaque `pull_record`
+- `Session`: default text → SQLite, cold `full` sync, steady file watch, opaque `pull_record`
 
 Out of scope here: `mir.sync.gitWatch`, multi-source fan-in, host domain codecs (e.g. Aura JSON → Imp `Graph`).
 

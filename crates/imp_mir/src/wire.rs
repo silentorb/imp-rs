@@ -182,8 +182,8 @@ fn has_cycle<'a>(nodes: impl Iterator<Item = &'a str>, adj: &BTreeMap<&str, Vec<
     visited != total
 }
 
-/// Build the default Miro Imp sync graph: text observeOut → sqlite observeIn.
-pub fn default_miro_graph(text_store_id: &str, sqlite_store_id: &str) -> Graph {
+/// Build the default Miro-profile Imp sync graph: text observeOut → sqlite observeIn.
+pub fn default_sync_graph(text_store_id: &str, sqlite_store_id: &str) -> Graph {
     let mut nodes = BTreeMap::new();
     nodes.insert(
         "authoring".to_string(),

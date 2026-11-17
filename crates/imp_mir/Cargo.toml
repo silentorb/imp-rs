@@ -1,6 +1,6 @@
 [package]
 name = "imp_mir"
-description = "Mir sync fabric and Miro text-to-SQLite pull for Imp hosts"
+description = "Mir sync fabric and Miro-profile text-to-SQLite pull for Imp hosts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
