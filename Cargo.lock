@@ -15,6 +15,7 @@ name = "imp_core_types"
 version = "0.5.0"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]

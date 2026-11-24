@@ -8,6 +8,7 @@ pub type TypeConstraintId = String;
 
 /// Catalog entry listing nominal type patterns that satisfy a constraint.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TypeConstraint {
     pub id: TypeConstraintId,
     pub members: Vec<SignalType>,
@@ -15,6 +16,7 @@ pub struct TypeConstraint {
 
 /// Named declarative collection of `TypeConstraint`s.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TypeConstraintLibrary {
     pub id: String,
     pub constraints: BTreeMap<TypeConstraintId, TypeConstraint>,

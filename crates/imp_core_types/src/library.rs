@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Maps declared external ports to boundary nodes in a graph-backed body.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BoundaryBindings {
     pub inputs: std::collections::BTreeMap<crate::PortId, NodeId>,
     pub outputs: std::collections::BTreeMap<crate::PortId, NodeId>,
@@ -13,6 +14,7 @@ pub struct BoundaryBindings {
 
 /// Catalog entry for a node type — port templates for a `NodeTypeId`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NodeDefinition {
     pub id: NodeTypeId,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -31,6 +33,7 @@ pub struct NodeDefinition {
 
 /// Named declarative collection of `NodeDefinition`s.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NodeLibrary {
     pub id: String,
     pub definitions: Vec<NodeDefinition>,
@@ -38,6 +41,7 @@ pub struct NodeLibrary {
 
 /// JSON-serializable catalog of graph-backed definitions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GraphLibrary {
     pub id: String,
     pub definitions: Vec<NodeDefinition>,

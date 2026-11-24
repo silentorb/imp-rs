@@ -6,6 +6,7 @@ pub type TypeParamId = String;
 
 /// Opaque type parameter on a polymorphic catalog entry.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TypeParam {
     pub id: TypeParamId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

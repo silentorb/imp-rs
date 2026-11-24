@@ -27,6 +27,7 @@ pub enum PrimitiveValue {
 
 /// One port template: identity + signal type + optional default + optional variadic.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Port {
     pub id: PortId,
     #[serde(rename = "type")]
@@ -44,6 +45,7 @@ pub type Ports = BTreeMap<PortId, Port>;
 pub type InputValues = BTreeMap<PortId, PrimitiveValue>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PortReference {
     pub node: NodeId,
     pub port: PortId,
@@ -51,6 +53,7 @@ pub struct PortReference {
 
 /// Graph node instance: identity, optional display title, type ref, and local input literals.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Node {
     pub id: NodeId,
     /// Optional human-facing label; editors show this when present, else `id`.
@@ -65,6 +68,7 @@ pub struct Node {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Edge {
     pub from: PortReference,
     pub to: PortReference,
@@ -74,6 +78,7 @@ pub struct Edge {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Graph {
     #[serde(default)]
     pub nodes: BTreeMap<NodeId, Node>,

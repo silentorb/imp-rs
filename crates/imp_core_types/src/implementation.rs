@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub type ImplementationId = String;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ImplementationCase {
     #[serde(rename = "match")]
     pub match_type: SignalType,
