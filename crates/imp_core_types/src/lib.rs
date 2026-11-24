@@ -98,3 +98,9 @@ pub use implementation::{
 
 mod core_library;
 pub use core_library::core_node_library;
+
+mod graph_source;
+pub use graph_source::{
+    graph_node_ids, graph_source, inbound_edges, materialize_graph, resolved_nodes,
+    unresolved_node_ids, EdgeProvider, GraphSource, LayeredNodes, NodeProvider,
+};

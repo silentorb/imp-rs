@@ -1,7 +1,7 @@
 //! Implementation resolution from type arguments.
 
 use imp_core_types::{
-    is_graph_backed_definition, Graph, ImplementationId, NodeDefinition, NodeImplementation,
+    is_graph_backed_definition, GraphSource, ImplementationId, NodeDefinition, NodeImplementation,
     SignalType,
 };
 use imp_registry::Registry;
@@ -58,17 +58,18 @@ pub fn signal_type_matches(pattern: &SignalType, signal_type: &SignalType) -> bo
         .all(|(pattern_arg, type_arg)| signal_type_matches(pattern_arg, type_arg))
 }
 
-pub fn resolve_implementation(
-    graph: &Graph,
+pub fn resolve_implementation<'a>(
+    graph: impl Into<GraphSource<'a>>,
     node_id: &str,
     registry: &Registry,
 ) -> Result<ImplementationId, ImplementationResolveError> {
-    let node = graph.nodes.get(node_id).ok_or_else(|| ImplementationResolveError {
+    let source: GraphSource<'a> = graph.into();
+    let node = source.nodes.get_node(&node_id.to_string()).ok_or_else(|| ImplementationResolveError {
         node_id: None,
         message: format!("unknown node \"{node_id}\""),
     })?;
 
-    let selected = resolve_selections(graph, registry).selected;
+    let selected = resolve_selections(source, registry).selected;
     let definition = selected.get(&node.id).ok_or_else(|| ImplementationResolveError {
         node_id: Some(node.id.clone()),
         message: format!(
@@ -95,7 +96,7 @@ pub fn resolve_implementation(
             default,
         } => {
             let type_args =
-                resolve_type_args(graph, &node.id, registry, Some(&selected)).ok_or_else(|| {
+                resolve_type_args(source, &node.id, registry, Some(&selected)).ok_or_else(|| {
                     ImplementationResolveError {
                         node_id: Some(node.id.clone()),
                         message: "cannot resolve type arguments for dispatched implementation"

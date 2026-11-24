@@ -1,45 +1,29 @@
 //! Graph type checking.
 
-use imp_core_types::Graph;
+use imp_core_types::{resolved_nodes, GraphSource};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::assignable::assignable;
 use crate::check_type_param_bounds::check_type_param_bounds;
 use crate::graph_analysis::{
-    candidate_survives, catalog_port_type_from_definition, collect_host_endpoints,
-    effective_definition, lookup_node, resolve_port_type_with_host, resolve_selections_with_host,
-    PortDirection, HostEndpoints,
+    candidate_survives, catalog_port_type_from_definition, effective_definition, resolve_port_type,
+    resolve_selections, PortDirection,
 };
-use crate::node_resolver::NodeResolver;
 use crate::substitution::{contains_type_var, TypeCheckError};
 use crate::unify::format_signal_type;
 
-pub fn check_graph(graph: &Graph, registry: &Registry) -> Vec<TypeCheckError> {
-    check_graph_with_resolver(graph, registry, None)
-}
-
-pub fn check_graph_with_resolver(
-    graph: &Graph,
-    registry: &Registry,
-    resolver: Option<&dyn NodeResolver>,
-) -> Vec<TypeCheckError> {
-    let host = collect_host_endpoints(graph, resolver);
-    check_graph_with_host(graph, registry, &host)
-}
-
-fn check_graph_with_host(
-    graph: &Graph,
-    registry: &Registry,
-    host: &HostEndpoints,
-) -> Vec<TypeCheckError> {
+/// Type-check a graph source. Pass `&graph` for a single serialized document.
+pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -> Vec<TypeCheckError> {
+    let source: GraphSource<'a> = graph.into();
+    let nodes = resolved_nodes(source);
     let mut errors = Vec::new();
-    let resolved = resolve_selections_with_host(graph, registry, host);
+    let resolved = resolve_selections(source, registry);
     let selected = resolved.selected;
     let mut edge_subst = resolved.subst;
     let unknown_types = resolved.unknown_types;
 
     for node_id in &unknown_types {
-        let Some(node) = graph.nodes.get(node_id) else {
+        let Some(node) = source.nodes.get_node(node_id) else {
             continue;
         };
         errors.push(TypeCheckError::at_node(
@@ -48,7 +32,7 @@ fn check_graph_with_host(
         ));
     }
 
-    for node in graph.nodes.values() {
+    for node in &nodes {
         if unknown_types.contains(&node.id) {
             continue;
         }
@@ -62,13 +46,12 @@ fn check_graph_with_host(
                 .iter()
                 .filter(|candidate| {
                     candidate_survives(
-                        graph,
+                        source,
                         &node.id,
                         candidate,
                         registry,
                         &selected,
                         &edge_subst,
-                        host,
                     )
                     .is_some()
                 })
@@ -107,9 +90,10 @@ fn check_graph_with_host(
         };
 
         for (port_id, port) in &effective.inputs {
-            let inbound: Vec<_> = graph
+            let inbound: Vec<_> = source
                 .edges
-                .iter()
+                .edge_entries()
+                .into_iter()
                 .filter(|(_, edge)| edge.to.node == node.id && edge.to.port == *port_id)
                 .collect();
             let has_edge = !inbound.is_empty();
@@ -165,15 +149,15 @@ fn check_graph_with_host(
         }
     }
 
-    for edge in graph.edges.values() {
-        let Some(from_node) = lookup_node(graph, host, &edge.from.node) else {
+    for (_, edge) in source.edges.edge_entries() {
+        let Some(from_node) = source.nodes.get_node(&edge.from.node) else {
             errors.push(TypeCheckError::at_node(
                 edge.from.node.clone(),
                 format!("unknown node \"{}\"", edge.from.node),
             ));
             continue;
         };
-        let Some(to_node) = lookup_node(graph, host, &edge.to.node) else {
+        let Some(to_node) = source.nodes.get_node(&edge.to.node) else {
             errors.push(TypeCheckError::at_node(
                 edge.to.node.clone(),
                 format!("unknown node \"{}\"", edge.to.node),
@@ -189,7 +173,7 @@ fn check_graph_with_host(
         };
 
         let Some(output_type) = catalog_port_type_from_definition(
-            from_node,
+            &from_node,
             from_def,
             &edge.from.port,
             PortDirection::Output,
@@ -202,7 +186,7 @@ fn check_graph_with_host(
             continue;
         };
         let Some(input_type) = catalog_port_type_from_definition(
-            to_node,
+            &to_node,
             to_def,
             &edge.to.port,
             PortDirection::Input,
@@ -225,20 +209,19 @@ fn check_graph_with_host(
         }
     }
 
-    for node in graph.nodes.values() {
+    for node in &nodes {
         let Some(definition) = selected.get(&node.id) else {
             continue;
         };
 
         for port_id in definition.outputs.keys() {
-            if let Some(resolved) = resolve_port_type_with_host(
-                graph,
+            if let Some(resolved) = resolve_port_type(
+                source,
                 &node.id,
                 port_id,
                 registry,
                 &edge_subst,
                 Some(&selected),
-                host,
             ) {
                 if contains_type_var(&resolved) {
                     errors.push(TypeCheckError::at_port(
@@ -254,21 +237,21 @@ fn check_graph_with_host(
         }
 
         for port_id in definition.inputs.keys() {
-            let has_edge = graph
+            let has_edge = source
                 .edges
-                .values()
-                .any(|edge| edge.to.node == node.id && edge.to.port == *port_id);
+                .edge_entries()
+                .into_iter()
+                .any(|(_, edge)| edge.to.node == node.id && edge.to.port == *port_id);
             if !has_edge {
                 continue;
             }
-            if let Some(resolved) = resolve_port_type_with_host(
-                graph,
+            if let Some(resolved) = resolve_port_type(
+                source,
                 &node.id,
                 port_id,
                 registry,
                 &edge_subst,
                 Some(&selected),
-                host,
             ) {
                 if contains_type_var(&resolved) {
                     errors.push(TypeCheckError::at_port(
@@ -284,7 +267,7 @@ fn check_graph_with_host(
         }
     }
 
-    errors.extend(check_type_param_bounds(graph, registry, Some(&selected)));
+    errors.extend(check_type_param_bounds(source, registry, Some(&selected)));
 
     errors
 }

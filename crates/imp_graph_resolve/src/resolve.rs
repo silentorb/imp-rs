@@ -1,7 +1,8 @@
 //! flattenGraph and buildExecutionProgram implementations.
 
 use imp_core_types::{
-    is_graph_backed_definition, Edge, Graph, NodeDefinition, NodeId, PortReference, SignalType,
+    is_graph_backed_definition, materialize_graph, Edge, Graph, GraphSource, NodeDefinition, NodeId,
+    PortReference, SignalType,
 };
 use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 use imp_typecheck::instantiate_node_definition;
@@ -296,8 +297,12 @@ fn push_edge(
     edges.insert(id, Edge { from, to, order });
 }
 
-pub fn flatten_graph(graph: &Graph, registry: &Registry) -> Result<Graph, String> {
-    let mut current = graph.clone();
+/// Expand graph-backed instances into one flat graph, starting from the source's resolved members.
+pub fn flatten_graph<'a>(
+    graph: impl Into<GraphSource<'a>>,
+    registry: &Registry,
+) -> Result<Graph, String> {
+    let mut current = materialize_graph(graph.into());
     let mut visiting = std::collections::BTreeSet::new();
 
     loop {
@@ -317,10 +322,11 @@ pub fn flatten_graph(graph: &Graph, registry: &Registry) -> Result<Graph, String
     }
 }
 
-pub fn build_execution_program(
-    graph: &Graph,
+pub fn build_execution_program<'a>(
+    graph: impl Into<GraphSource<'a>>,
     registry: &Registry,
 ) -> Result<ExecutionProgram, String> {
+    let graph = &materialize_graph(graph.into());
     let mut subgraphs = BTreeMap::new();
 
     for node in graph.nodes.values() {

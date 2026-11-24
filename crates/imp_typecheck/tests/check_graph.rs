@@ -2,11 +2,12 @@
 
 use imp_collection_transforms::collection_transforms_library;
 use imp_core_types::{
-    collection_of, concrete_type, core_node_library, list_of, set_of, Edge, Graph, Node,
-    NodeDefinition, Port, PortReference, PrimitiveValue,
+    collection_of, concrete_type, core_node_library, list_of, set_of, Edge, Graph, GraphSource,
+    LayeredNodes, Node, PortReference, PrimitiveValue,
 };
 use imp_registry::{create_registry, load_library};
-use imp_typecheck::{check_graph, check_graph_with_resolver, ResolvedEndpoint};
+use imp_typecheck::check_graph;
+use std::collections::BTreeMap;
 
 fn transforms_registry() -> imp_registry::Registry {
     load_library(
@@ -911,10 +912,8 @@ fn rejects_edge_to_missing_node() {
     );
 }
 
-#[test]
-fn accepts_host_resolved_missing_from_endpoint() {
-    let registry = transforms_registry();
-    let graph = Graph {
+fn output_wired_from_remote() -> Graph {
+    Graph {
         nodes: [(
             "out".into(),
             Node {
@@ -941,81 +940,82 @@ fn accepts_host_resolved_missing_from_endpoint() {
             },
         )]
         .into(),
+    }
+}
+
+#[test]
+fn checks_layered_provider_node_like_a_local_one() {
+    let registry = transforms_registry();
+    let graph = output_wired_from_remote();
+    let remote: BTreeMap<String, Node> = [(
+        "remote".into(),
+        Node {
+            id: "remote".into(),
+            title: None,
+            node_type: "literal".into(),
+            type_args: vec![],
+            inputs: [("value".into(), PrimitiveValue::Number(1.0))].into(),
+        },
+    )]
+    .into();
+    let nodes = LayeredNodes {
+        providers: vec![&graph.nodes, &remote],
     };
-    let resolver = |node_id: &String| {
-        if node_id != "remote" {
-            return None;
-        }
-        Some(ResolvedEndpoint {
-            node: Node {
-                id: "remote".into(),
-                title: None,
-                node_type: "host_remote".into(),
-                type_args: vec![],
-                inputs: Default::default(),
-            },
-            definition: NodeDefinition {
-                id: "host_remote".into(),
-                name: None,
-                type_params: vec![],
-                implementation: None,
-                inputs: Default::default(),
-                outputs: [(
-                    "value".into(),
-                    Port {
-                        id: "value".into(),
-                        signal_type: concrete_type("any", vec![]),
-                        default_value: None,
-                        variadic: false,
-                    },
-                )]
-                .into(),
-                body: None,
-                bindings: None,
-            },
-        })
+    let source = GraphSource {
+        nodes: &nodes,
+        edges: &graph.edges,
     };
-    let errors = check_graph_with_resolver(&graph, &registry, Some(&resolver));
+    let errors = check_graph(source, &registry);
     assert!(errors.is_empty(), "{errors:?}");
 }
 
 #[test]
-fn rejects_host_miss_as_unknown_node() {
+fn rejects_layered_miss_as_unknown_node() {
     let registry = transforms_registry();
-    let graph = Graph {
-        nodes: [(
-            "out".into(),
-            Node {
-                id: "out".into(),
-                title: None,
-                node_type: "output".into(),
-                type_args: vec![],
-                inputs: Default::default(),
-            },
-        )]
-        .into(),
-        edges: [(
-            "e".into(),
-            Edge {
-                from: PortReference {
-                    node: "ghost".into(),
-                    port: "value".into(),
-                },
-                to: PortReference {
-                    node: "out".into(),
-                    port: "value".into(),
-                },
-                order: None,
-            },
-        )]
-        .into(),
+    let graph = output_wired_from_remote();
+    let empty: BTreeMap<String, Node> = BTreeMap::new();
+    let nodes = LayeredNodes {
+        providers: vec![&graph.nodes, &empty],
     };
-    let resolver = |_node_id: &String| None;
-    let errors = check_graph_with_resolver(&graph, &registry, Some(&resolver));
+    let source = GraphSource {
+        nodes: &nodes,
+        edges: &graph.edges,
+    };
+    let errors = check_graph(source, &registry);
     assert!(
         errors
             .iter()
-            .any(|e| e.node_id.as_deref() == Some("ghost") && e.message.contains("unknown node")),
+            .any(|e| e.node_id.as_deref() == Some("remote") && e.message.contains("unknown node")),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn types_layered_nodes_through_the_registry() {
+    let registry = transforms_registry();
+    let graph = output_wired_from_remote();
+    let remote: BTreeMap<String, Node> = [(
+        "remote".into(),
+        Node {
+            id: "remote".into(),
+            title: None,
+            node_type: "not_registered".into(),
+            type_args: vec![],
+            inputs: Default::default(),
+        },
+    )]
+    .into();
+    let nodes = LayeredNodes {
+        providers: vec![&graph.nodes, &remote],
+    };
+    let source = GraphSource {
+        nodes: &nodes,
+        edges: &graph.edges,
+    };
+    let errors = check_graph(source, &registry);
+    assert!(
+        errors.iter().any(|e| e.node_id.as_deref() == Some("remote")
+            && e.message.contains("unknown NodeDefinition")),
         "{errors:?}"
     );
 }

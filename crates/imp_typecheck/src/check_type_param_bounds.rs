@@ -1,6 +1,6 @@
 //! Type-parameter bound checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
-use imp_core_types::{Graph, SignalType, TypeConstraint};
+use imp_core_types::{resolved_nodes, GraphSource, SignalType, TypeConstraint};
 use imp_registry::{get_type_constraint, Registry};
 
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
@@ -18,22 +18,23 @@ fn satisfies_constraint(type_arg: &SignalType, constraint: &TypeConstraint) -> b
     })
 }
 
-pub fn check_type_param_bounds(
-    graph: &Graph,
+pub fn check_type_param_bounds<'a>(
+    graph: impl Into<GraphSource<'a>>,
     registry: &Registry,
     selected: Option<&SelectedDefinitions>,
 ) -> Vec<TypeCheckError> {
+    let source: GraphSource<'a> = graph.into();
     let mut errors = Vec::new();
     let owned;
     let selections = match selected {
         Some(map) => map,
         None => {
-            owned = resolve_selections(graph, registry).selected;
+            owned = resolve_selections(source, registry).selected;
             &owned
         }
     };
 
-    for node in graph.nodes.values() {
+    for node in &resolved_nodes(source) {
         let Some(definition) = selections.get(&node.id) else {
             continue;
         };
@@ -41,7 +42,7 @@ pub fn check_type_param_bounds(
             continue;
         }
 
-        let Some(type_args) = resolve_type_args(graph, &node.id, registry, Some(selections)) else {
+        let Some(type_args) = resolve_type_args(source, &node.id, registry, Some(selections)) else {
             continue;
         };
 

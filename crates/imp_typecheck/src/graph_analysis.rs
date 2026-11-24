@@ -1,16 +1,14 @@
 //! Shared graph analysis for type checking and implementation dispatch.
 
-use imp_core_types::{Graph, Node, NodeDefinition, NodeId, PortId, SignalType};
+use imp_core_types::{resolved_nodes, GraphSource, Node, NodeDefinition, NodeId, PortId, SignalType};
 use imp_registry::{get_node_definitions, Registry};
 use std::collections::BTreeMap;
 
 use crate::assignable::assignable;
 use crate::instantiate::instantiate_node_type;
-use crate::node_resolver::{NodeResolver, ResolvedEndpoint};
 use crate::substitution::{apply_substitution, scope_signal_type, Substitution};
 
 pub type SelectedDefinitions = BTreeMap<NodeId, NodeDefinition>;
-pub type HostEndpoints = BTreeMap<NodeId, ResolvedEndpoint>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PortDirection {
@@ -61,70 +59,36 @@ pub fn catalog_port_type(
     catalog_port_type_from_definition(node, &definition, port_id, direction)
 }
 
-/// Collect host-resolved views for edge endpoints missing from `Graph.nodes`.
-pub fn collect_host_endpoints(
-    graph: &Graph,
-    resolver: Option<&dyn NodeResolver>,
-) -> HostEndpoints {
-    let mut host = HostEndpoints::new();
-    let Some(resolver) = resolver else {
-        return host;
-    };
-    for edge in graph.edges.values() {
-        for node_id in [&edge.from.node, &edge.to.node] {
-            if graph.nodes.contains_key(node_id) || host.contains_key(node_id) {
-                continue;
-            }
-            if let Some(resolved) = resolver.resolve_endpoint(node_id) {
-                host.insert(node_id.clone(), resolved);
-            }
-        }
-    }
-    host
-}
-
-/// Local map entry or host-resolved synthetic node.
-pub fn lookup_node<'a>(
-    graph: &'a Graph,
-    host: &'a HostEndpoints,
-    node_id: &NodeId,
-) -> Option<&'a Node> {
-    graph
-        .nodes
-        .get(node_id)
-        .or_else(|| host.get(node_id).map(|resolved| &resolved.node))
-}
-
 /// Try whether `candidate` is consistent with edges touching `node_id` whose
-/// other endpoint already has a selected definition.
+/// other endpoint already has a selected definition. Unresolved neighbors do not
+/// constrain the candidate; `check_graph` reports them.
 pub fn candidate_survives(
-    graph: &Graph,
+    source: GraphSource<'_>,
     node_id: &NodeId,
     candidate: &NodeDefinition,
     _registry: &Registry,
     selected: &SelectedDefinitions,
     subst: &Substitution,
-    host: &HostEndpoints,
 ) -> Option<Substitution> {
-    let node = graph.nodes.get(node_id)?;
+    let node = source.nodes.get_node(node_id)?;
     let mut trial = subst.clone();
 
-    for edge in graph.edges.values() {
+    for (_, edge) in source.edges.edge_entries() {
         if edge.to.node == *node_id {
-            let Some(from_node) = lookup_node(graph, host, &edge.from.node) else {
+            let Some(from_node) = source.nodes.get_node(&edge.from.node) else {
                 continue;
             };
             let Some(from_def) = selected.get(&from_node.id) else {
                 continue;
             };
             let output_type = catalog_port_type_from_definition(
-                from_node,
+                &from_node,
                 from_def,
                 &edge.from.port,
                 PortDirection::Output,
             )?;
             let input_type = catalog_port_type_from_definition(
-                node,
+                &node,
                 candidate,
                 &edge.to.port,
                 PortDirection::Input,
@@ -133,20 +97,20 @@ pub fn candidate_survives(
         }
 
         if edge.from.node == *node_id {
-            let Some(to_node) = lookup_node(graph, host, &edge.to.node) else {
+            let Some(to_node) = source.nodes.get_node(&edge.to.node) else {
                 continue;
             };
             let Some(to_def) = selected.get(&to_node.id) else {
                 continue;
             };
             let output_type = catalog_port_type_from_definition(
-                node,
+                &node,
                 candidate,
                 &edge.from.port,
                 PortDirection::Output,
             )?;
             let input_type = catalog_port_type_from_definition(
-                to_node,
+                &to_node,
                 to_def,
                 &edge.to.port,
                 PortDirection::Input,
@@ -164,22 +128,18 @@ pub struct ResolveSelections {
     pub unknown_types: Vec<NodeId>,
 }
 
-/// Fixed-point overload selection + substitution accumulation.
-pub fn resolve_selections(graph: &Graph, registry: &Registry) -> ResolveSelections {
-    resolve_selections_with_host(graph, registry, &HostEndpoints::new())
-}
-
-/// Like [`resolve_selections`], treating host-resolved endpoints as selected neighbors.
-pub fn resolve_selections_with_host(
-    graph: &Graph,
+/// Fixed-point overload selection + substitution accumulation over the source's resolved members.
+pub fn resolve_selections<'a>(
+    graph: impl Into<GraphSource<'a>>,
     registry: &Registry,
-    host: &HostEndpoints,
 ) -> ResolveSelections {
+    let source = graph.into();
+    let nodes = resolved_nodes(source);
     let mut selected = SelectedDefinitions::new();
     let mut unknown_types = Vec::new();
     let mut subst = Substitution::new();
 
-    for node in graph.nodes.values() {
+    for node in &nodes {
         let overloads = get_node_definitions(registry, &node.node_type);
         if overloads.is_empty() {
             unknown_types.push(node.id.clone());
@@ -190,15 +150,11 @@ pub fn resolve_selections_with_host(
         }
     }
 
-    for (node_id, resolved) in host {
-        selected.insert(node_id.clone(), resolved.definition.clone());
-    }
-
     let mut changed = true;
     while changed {
         changed = false;
 
-        for node in graph.nodes.values() {
+        for node in &nodes {
             if selected.contains_key(&node.id) {
                 continue;
             }
@@ -209,15 +165,9 @@ pub fn resolve_selections_with_host(
 
             let mut survivors: Vec<(NodeDefinition, Substitution)> = Vec::new();
             for candidate in overloads {
-                if let Some(trial) = candidate_survives(
-                    graph,
-                    &node.id,
-                    candidate,
-                    registry,
-                    &selected,
-                    &subst,
-                    host,
-                ) {
+                if let Some(trial) =
+                    candidate_survives(source, &node.id, candidate, registry, &selected, &subst)
+                {
                     survivors.push((candidate.clone(), trial));
                 }
             }
@@ -230,11 +180,11 @@ pub fn resolve_selections_with_host(
             }
         }
 
-        for edge in graph.edges.values() {
-            let Some(from_node) = lookup_node(graph, host, &edge.from.node) else {
+        for (_, edge) in source.edges.edge_entries() {
+            let Some(from_node) = source.nodes.get_node(&edge.from.node) else {
                 continue;
             };
-            let Some(to_node) = lookup_node(graph, host, &edge.to.node) else {
+            let Some(to_node) = source.nodes.get_node(&edge.to.node) else {
                 continue;
             };
             let Some(from_def) = selected.get(&from_node.id) else {
@@ -245,7 +195,7 @@ pub fn resolve_selections_with_host(
             };
 
             let Some(output_type) = catalog_port_type_from_definition(
-                from_node,
+                &from_node,
                 from_def,
                 &edge.from.port,
                 PortDirection::Output,
@@ -253,7 +203,7 @@ pub fn resolve_selections_with_host(
                 continue;
             };
             let Some(input_type) = catalog_port_type_from_definition(
-                to_node,
+                &to_node,
                 to_def,
                 &edge.to.port,
                 PortDirection::Input,
@@ -277,31 +227,23 @@ pub fn resolve_selections_with_host(
     }
 }
 
-pub fn collect_graph_substitution(graph: &Graph, registry: &Registry) -> Substitution {
+pub fn collect_graph_substitution<'a>(
+    graph: impl Into<GraphSource<'a>>,
+    registry: &Registry,
+) -> Substitution {
     resolve_selections(graph, registry).subst
 }
 
-pub fn resolve_port_type(
-    graph: &Graph,
+pub fn resolve_port_type<'a>(
+    graph: impl Into<GraphSource<'a>>,
     node_id: &NodeId,
     port_id: &PortId,
     registry: &Registry,
     subst: &Substitution,
     selected: Option<&SelectedDefinitions>,
 ) -> Option<SignalType> {
-    resolve_port_type_with_host(graph, node_id, port_id, registry, subst, selected, &HostEndpoints::new())
-}
-
-pub fn resolve_port_type_with_host(
-    graph: &Graph,
-    node_id: &NodeId,
-    port_id: &PortId,
-    registry: &Registry,
-    subst: &Substitution,
-    selected: Option<&SelectedDefinitions>,
-    host: &HostEndpoints,
-) -> Option<SignalType> {
-    let node = lookup_node(graph, host, node_id)?;
+    let source = graph.into();
+    let node = source.nodes.get_node(node_id)?;
     let overloads = get_node_definitions(registry, &node.node_type);
     let definition = selected
         .and_then(|map| map.get(node_id).cloned())
@@ -314,21 +256,21 @@ pub fn resolve_port_type_with_host(
         })?;
 
     if let Some(output_type) =
-        catalog_port_type_from_definition(node, &definition, port_id, PortDirection::Output)
+        catalog_port_type_from_definition(&node, &definition, port_id, PortDirection::Output)
     {
         return Some(apply_substitution(&output_type, subst));
     }
 
-    let effective = effective_definition(node, &definition)?;
+    let effective = effective_definition(&node, &definition)?;
     let input_template = effective.inputs.get(port_id)?;
     let mut input_type = scope_signal_type(&input_template.signal_type, &node.id);
     let mut local_subst = subst.clone();
 
-    for edge in graph.edges.values() {
+    for (_, edge) in source.edges.edge_entries() {
         if edge.to.node == *node_id && edge.to.port == *port_id {
-            if let Some(from_node) = lookup_node(graph, host, &edge.from.node) {
+            if let Some(from_node) = source.nodes.get_node(&edge.from.node) {
                 if let Some(source_type) = catalog_port_type(
-                    from_node,
+                    &from_node,
                     registry,
                     &edge.from.port,
                     PortDirection::Output,

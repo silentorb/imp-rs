@@ -1,24 +1,25 @@
 //! Type-argument inference for implementation dispatch.
 
-use imp_core_types::{Graph, NodeId, SignalType};
+use imp_core_types::{GraphSource, NodeId, SignalType};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
 use crate::substitution::{apply_substitution, scoped_param};
 
-pub fn resolve_type_args(
-    graph: &Graph,
+pub fn resolve_type_args<'a>(
+    graph: impl Into<GraphSource<'a>>,
     node_id: &NodeId,
     registry: &Registry,
     selected: Option<&SelectedDefinitions>,
 ) -> Option<Vec<SignalType>> {
-    let node = graph.nodes.get(node_id)?;
+    let source: GraphSource<'a> = graph.into();
+    let node = source.nodes.get_node(node_id)?;
     let overloads = get_node_definitions(registry, &node.node_type);
     let owned;
     let selections = match selected {
         Some(map) => map,
         None => {
-            owned = resolve_selections(graph, registry).selected;
+            owned = resolve_selections(source, registry).selected;
             &owned
         }
     };
@@ -38,7 +39,7 @@ pub fn resolve_type_args(
         return Some(node.type_args.clone());
     }
 
-    let subst = resolve_selections(graph, registry).subst;
+    let subst = resolve_selections(source, registry).subst;
     let mut resolved = Vec::new();
 
     for param in &definition.type_params {
