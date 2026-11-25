@@ -58,4 +58,4 @@ Cross-package overview: [imp-spec `docs/overview/`](https://github.com/silentorb
 
 ## Versioning
 
-Cargo workspace version (`0.2.0`) aligns with the imp-ts npm epoch. This repo has no npm packages.
+Cargo workspace version (`0.6.0`) aligns with the imp-ts npm epoch. This repo has no npm packages.
