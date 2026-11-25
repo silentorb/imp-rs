@@ -1,19 +1,19 @@
 //! Graph-backed definition validation.
 //! Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
-use imp_core_types::{is_graph_backed_definition, Graph, NodeDefinition, SignalType};
+use imp_core_types::{is_graph_backed_definition, Graph, NodeDefinition, Type};
 use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 
 use crate::check::check_graph;
 use crate::graph_analysis::{catalog_port_type, resolve_port_type, PortDirection};
 use crate::instantiate::instantiate_node_definition;
 use crate::substitution::{
-    contains_type_var, rigid_type, scope_signal_type, Substitution, TypeCheckError,
+    contains_type_var, rigid_type, scope_type, Substitution, TypeCheckError,
 };
 use crate::unify::unify;
 
-fn scope_definition_port(signal_type: &SignalType, definition_id: &str) -> SignalType {
-    scope_signal_type(signal_type, &format!("__def__{definition_id}"))
+fn scope_definition_port(ty: &Type, definition_id: &str) -> Type {
+    scope_type(ty, &format!("__def__{definition_id}"))
 }
 
 pub fn check_definition(
@@ -153,11 +153,11 @@ pub fn check_definition(
         };
         let expected = if expected_port.variadic {
             imp_core_types::list_of(scope_definition_port(
-                &expected_port.signal_type,
+                &expected_port.ty,
                 &definition.id,
             ))
         } else {
-            scope_definition_port(&expected_port.signal_type, &definition.id)
+            scope_definition_port(&expected_port.ty, &definition.id)
         };
         if let Err(err) = unify(&boundary_type, &expected, &subst) {
             errors.push({
@@ -203,7 +203,7 @@ pub fn check_definition(
         let Some(expected_port) = definition.outputs.get(port_id) else {
             continue;
         };
-        let expected = scope_definition_port(&expected_port.signal_type, &definition.id);
+        let expected = scope_definition_port(&expected_port.ty, &definition.id);
         if let Err(err) = unify(&boundary_type, &expected, &subst) {
             errors.push({
                 let mut tc_err = TypeCheckError::for_definition(definition.id.clone(), err.message);
@@ -288,7 +288,7 @@ pub fn check_graph_definitions(registry: &Registry) -> Vec<TypeCheckError> {
 /// body is checked once for every instantiation. Bound boundary nodes without `typeArgs` take
 /// their declared port type (spec: Generic graph-backed definitions).
 fn rigid_definition(definition: &NodeDefinition) -> Result<NodeDefinition, String> {
-    let rigid_args: Vec<SignalType> = definition
+    let rigid_args: Vec<Type> = definition
         .type_params
         .iter()
         .map(|param| rigid_type(&param.id, &param.bounds))
@@ -304,16 +304,16 @@ fn rigid_definition(definition: &NodeDefinition) -> Result<NodeDefinition, Strin
             let declared = definition.inputs.get(port_id)?;
             let rigid_port = rigid.inputs.get(port_id)?;
             let boundary_type = if declared.variadic {
-                imp_core_types::list_of(rigid_port.signal_type.clone())
+                imp_core_types::list_of(rigid_port.ty.clone())
             } else {
-                rigid_port.signal_type.clone()
+                rigid_port.ty.clone()
             };
-            Some((node_id, &declared.signal_type, boundary_type))
+            Some((node_id, &declared.ty, boundary_type))
         })
         .chain(bindings.outputs.iter().filter_map(|(port_id, node_id)| {
             let declared = definition.outputs.get(port_id)?;
             let rigid_port = rigid.outputs.get(port_id)?;
-            Some((node_id, &declared.signal_type, rigid_port.signal_type.clone()))
+            Some((node_id, &declared.ty, rigid_port.ty.clone()))
         }))
         .collect::<Vec<_>>();
     for (node_id, declared_type, boundary_type) in boundaries {

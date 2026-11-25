@@ -17,7 +17,7 @@ fn passthrough_definition() -> NodeDefinition {
             "rows".into(),
             Port {
                 id: "rows".into(),
-                signal_type: concrete_type("collection", vec![]),
+                ty: concrete_type("collection", vec![]),
                 default_value: None,
             variadic: false,
             },
@@ -28,7 +28,7 @@ fn passthrough_definition() -> NodeDefinition {
             "rows".into(),
             Port {
                 id: "rows".into(),
-                signal_type: concrete_type("collection", vec![]),
+                ty: concrete_type("collection", vec![]),
                 default_value: None,
             variadic: false,
             },
@@ -151,7 +151,7 @@ fn check_definition_requires_list_boundary_for_variadic_input() {
             "operands".into(),
             Port {
                 id: "operands".into(),
-                signal_type: concrete_type("boolean", vec![]),
+                ty: concrete_type("boolean", vec![]),
                 default_value: None,
                 variadic: true,
             },
@@ -162,7 +162,7 @@ fn check_definition_requires_list_boundary_for_variadic_input() {
             "value".into(),
             Port {
                 id: "value".into(),
-                signal_type: concrete_type("boolean", vec![]),
+                ty: concrete_type("boolean", vec![]),
                 default_value: None,
                 variadic: false,
             },

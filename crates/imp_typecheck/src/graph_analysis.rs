@@ -1,12 +1,12 @@
 //! Shared graph analysis for type checking and implementation dispatch.
 
-use imp_core_types::{resolved_nodes, GraphSource, Node, NodeDefinition, NodeId, PortId, SignalType};
+use imp_core_types::{resolved_nodes, GraphSource, Node, NodeDefinition, NodeId, PortId, Type};
 use imp_registry::{get_node_definitions, Registry};
 use std::collections::BTreeMap;
 
 use crate::assignable::assignable;
 use crate::instantiate::instantiate_node_type;
-use crate::substitution::{apply_substitution, is_any_type, scope_signal_type, Substitution};
+use crate::substitution::{apply_substitution, is_any_type, scope_type, Substitution};
 
 pub type SelectedDefinitions = BTreeMap<NodeId, NodeDefinition>;
 
@@ -37,13 +37,13 @@ pub fn catalog_port_type_from_definition(
     definition: &NodeDefinition,
     port_id: &PortId,
     direction: PortDirection,
-) -> Option<SignalType> {
+) -> Option<Type> {
     let effective = effective_definition(node, definition)?;
     let port = match direction {
         PortDirection::Input => effective.inputs.get(port_id)?,
         PortDirection::Output => effective.outputs.get(port_id)?,
     };
-    Some(scope_signal_type(&port.signal_type, &node.id))
+    Some(scope_type(&port.ty, &node.id))
 }
 
 pub fn catalog_port_type(
@@ -52,7 +52,7 @@ pub fn catalog_port_type(
     port_id: &PortId,
     direction: PortDirection,
     selected: Option<&SelectedDefinitions>,
-) -> Option<SignalType> {
+) -> Option<Type> {
     // The raw (sole) definition: catalog_port_type_from_definition applies Node.typeArgs itself.
     let definition = selected
         .and_then(|map| map.get(&node.id).cloned())
@@ -263,7 +263,7 @@ pub fn resolve_port_type<'a>(
     registry: &Registry,
     subst: &Substitution,
     selected: Option<&SelectedDefinitions>,
-) -> Option<SignalType> {
+) -> Option<Type> {
     let source = graph.into();
     let node = source.nodes.get_node(node_id)?;
     let overloads = get_node_definitions(registry, &node.node_type);
@@ -285,7 +285,7 @@ pub fn resolve_port_type<'a>(
 
     let effective = effective_definition(&node, &definition)?;
     let input_template = effective.inputs.get(port_id)?;
-    let mut input_type = scope_signal_type(&input_template.signal_type, &node.id);
+    let mut input_type = scope_type(&input_template.ty, &node.id);
     let mut local_subst = subst.clone();
 
     for (_, edge) in source.edges.edge_entries() {
@@ -311,6 +311,6 @@ pub fn resolve_port_type<'a>(
 }
 
 /// True when an edge's target port type is `any` under `subst` (the weakest inference constraint).
-fn targets_any(input_type: &SignalType, subst: &Substitution) -> bool {
+fn targets_any(input_type: &Type, subst: &Substitution) -> bool {
     is_any_type(&apply_substitution(input_type, subst))
 }

@@ -2,7 +2,7 @@
 
 use imp_core_types::{
     is_graph_backed_definition, materialize_graph, Edge, Graph, GraphSource, NodeDefinition, NodeId,
-    PortReference, SignalType,
+    PortReference, Type,
 };
 use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 use imp_typecheck::{contains_type_var, instantiate_node_definition};
@@ -16,7 +16,7 @@ pub struct ExecutionProgram {
     pub subgraphs: BTreeMap<SubgraphKey, Graph>,
 }
 
-pub fn subgraph_key(definition_id: &str, type_args: Option<&[SignalType]>) -> SubgraphKey {
+pub fn subgraph_key(definition_id: &str, type_args: Option<&[Type]>) -> SubgraphKey {
     let args = type_args.unwrap_or(&[]);
     format!(
         "{definition_id}::{}",
@@ -198,7 +198,7 @@ fn expand_composite_instance(
         let declared = definition.inputs.get(&input_port);
         if declared.map(|p| p.variadic).unwrap_or(false) {
             let pack_id = prefix_id(instance_id, &format!("__pack_{input_port}"));
-            let element_type = declared.unwrap().signal_type.clone();
+            let element_type = declared.unwrap().ty.clone();
             nodes.insert(
                 pack_id.clone(),
                 imp_core_types::Node {

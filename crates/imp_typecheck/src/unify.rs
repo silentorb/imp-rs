@@ -1,6 +1,6 @@
-//! Signal-type unification.
+//! Type unification.
 
-use imp_core_types::SignalType;
+use imp_core_types::Type;
 use thiserror::Error;
 
 use crate::substitution::{
@@ -15,8 +15,8 @@ pub struct UnifyError {
 }
 
 pub fn unify(
-    left: &SignalType,
-    right: &SignalType,
+    left: &Type,
+    right: &Type,
     subst: &Substitution,
 ) -> Result<Substitution, UnifyError> {
     let a = apply_substitution(left, subst);
@@ -36,7 +36,7 @@ pub fn unify(
     }
 
     match (&a, &b) {
-        (SignalType::Var { param: left_param }, SignalType::Var { param: right_param }) => {
+        (Type::Var { param: left_param }, Type::Var { param: right_param }) => {
             if left_param == right_param {
                 return Ok(subst.clone());
             }
@@ -47,19 +47,19 @@ pub fn unify(
                 return unify(&a, existing, subst);
             }
             let mut next = subst.clone();
-            next.insert(right_param.clone(), SignalType::Var {
+            next.insert(right_param.clone(), Type::Var {
                 param: left_param.clone(),
             });
             Ok(next)
         }
-        (SignalType::Var { param }, other) => unify_var(param, other, subst),
-        (other, SignalType::Var { param }) => unify_var(param, other, subst),
+        (Type::Var { param }, other) => unify_var(param, other, subst),
+        (other, Type::Var { param }) => unify_var(param, other, subst),
         (
-            SignalType::Concrete {
+            Type::Concrete {
                 id: left_id,
                 args: left_args,
             },
-            SignalType::Concrete {
+            Type::Concrete {
                 id: right_id,
                 args: right_args,
             },
@@ -68,8 +68,8 @@ pub fn unify(
                 return Err(UnifyError {
                     message: format!(
                         "cannot unify {} with {}",
-                        format_signal_type(&a),
-                        format_signal_type(&b)
+                        format_type(&a),
+                        format_type(&b)
                     ),
                 });
             }
@@ -93,16 +93,16 @@ pub fn unify(
 
 fn unify_var(
     param: &str,
-    other: &SignalType,
+    other: &Type,
     subst: &Substitution,
 ) -> Result<Substitution, UnifyError> {
     let resolved = apply_substitution(other, subst);
-    if let SignalType::Var { param: other_param } = &resolved {
+    if let Type::Var { param: other_param } = &resolved {
         if other_param == param {
             return Ok(subst.clone());
         }
         return unify(
-            &SignalType::Var {
+            &Type::Var {
                 param: param.into(),
             },
             &resolved,
@@ -119,17 +119,17 @@ fn unify_var(
     Ok(next)
 }
 
-pub fn format_signal_type(signal_type: &SignalType) -> String {
-    if let Some((param, _)) = rigid_parts(signal_type) {
+pub fn format_type(ty: &Type) -> String {
+    if let Some((param, _)) = rigid_parts(ty) {
         return param.to_string();
     }
-    match signal_type {
-        SignalType::Var { param } => param.clone(),
-        SignalType::Concrete { id, args } if args.is_empty() => id.clone(),
-        SignalType::Concrete { id, args } => {
+    match ty {
+        Type::Var { param } => param.clone(),
+        Type::Concrete { id, args } if args.is_empty() => id.clone(),
+        Type::Concrete { id, args } => {
             let rendered = args
                 .iter()
-                .map(format_signal_type)
+                .map(format_type)
                 .collect::<Vec<_>>()
                 .join(", ");
             format!("{id}<{rendered}>")

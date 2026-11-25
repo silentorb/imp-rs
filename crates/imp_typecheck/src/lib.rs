@@ -1,4 +1,4 @@
-//! Static signal-type checking for Imp graphs.
+//! Static type checking for Imp graphs.
 //! Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
 mod assignable;
@@ -23,7 +23,7 @@ pub use graph_analysis::{
     resolve_selections, PortDirection, ResolveSelections, SelectedDefinitions,
 };
 pub use resolve_implementation::{
-    effective_node_implementation, resolve_implementation, signal_type_matches,
+    effective_node_implementation, resolve_implementation, type_matches,
     ImplementationResolveError,
 };
 pub use resolve_type_args::resolve_type_args;
@@ -31,7 +31,7 @@ pub use substitution::TypeCheckError;
 pub use instantiate::{instantiate_node_definition, instantiate_node_type};
 pub use subtype::is_subtype_id;
 pub use substitution::{
-    apply_substitution, contains_type_var, is_any_type, scope_signal_type, scoped_param,
+    apply_substitution, contains_type_var, is_any_type, scope_type, scoped_param,
     Substitution,
 };
-pub use unify::{format_signal_type, unify, UnifyError};
+pub use unify::{format_type, unify, UnifyError};

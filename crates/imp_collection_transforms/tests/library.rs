@@ -1,7 +1,7 @@
 //! Collection transforms library tests.
 
 use imp_collection_transforms::collection_transforms_library;
-use imp_core_types::{list_of, set_of, type_var, NodeImplementation, SignalType};
+use imp_core_types::{list_of, set_of, type_var, NodeImplementation, Type};
 
 fn defs(id: &str) -> Vec<imp_core_types::NodeDefinition> {
     collection_transforms_library()
@@ -37,7 +37,7 @@ fn collection_transforms_library_has_expected_types() {
         defs("filter")[1]
             .inputs
             .get("collection")
-            .map(|p| &p.signal_type),
+            .map(|p| &p.ty),
         Some(&set_of(type_var("T")))
     );
     assert_eq!(defs("except").len(), 2);
@@ -46,12 +46,12 @@ fn collection_transforms_library_has_expected_types() {
     assert_eq!(defs("sort").len(), 1);
     assert_eq!(defs("limit").len(), 1);
     assert_eq!(
-        def("sort").inputs.get("collection").map(|p| &p.signal_type),
+        def("sort").inputs.get("collection").map(|p| &p.ty),
         Some(&list_of(type_var("T")))
     );
     assert!(matches!(
-        def("limit").outputs.get("collection").map(|p| &p.signal_type),
-        Some(SignalType::Concrete { id, .. }) if id == "list"
+        def("limit").outputs.get("collection").map(|p| &p.ty),
+        Some(Type::Concrete { id, .. }) if id == "list"
     ));
     assert!(def("equals").inputs.contains_key("left"));
     assert!(lib.definitions.iter().any(|entry| entry.id == "literal"));

@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | `crates/imp_core_types/` | `imp-core-types` | Core graph + library types; core boundary `NodeLibrary` |
 | `crates/imp_registry/` | `imp-registry` | Load `NodeLibrary` values and look up `NodeType`s |
-| `crates/imp_typecheck/` | `imp-typecheck` | Static signal-type checking |
+| `crates/imp_typecheck/` | `imp-typecheck` | Static type checking |
 | `crates/imp_graph_resolve/` | `imp-graph-resolve` | Late nested graph resolution |
 | `crates/imp_collection_transforms/` | `imp-collection-transforms` | Collection combinator `NodeLibrary` |
 | `crates/imp_pathing/` | `imp-pathing` | GQL-like path operator `NodeLibrary` |

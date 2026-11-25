@@ -3,7 +3,7 @@
 
 use imp_core_types::{
     is_concrete, is_graph_backed_definition, is_type_var, GraphLibrary, NodeDefinition, NodeLibrary,
-    NodeTypeId, Port, SignalType, TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
+    NodeTypeId, Port, Type, TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
 };
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -72,9 +72,9 @@ pub fn signature_fingerprint(definition: &NodeDefinition) -> String {
         .map(|(i, p)| (p.id.as_str(), i))
         .collect();
 
-    fn type_key(signal_type: &SignalType, param_index: &BTreeMap<&str, usize>) -> String {
-        if is_type_var(signal_type) {
-            let SignalType::Var { param } = signal_type else {
+    fn type_key(ty: &Type, param_index: &BTreeMap<&str, usize>) -> String {
+        if is_type_var(ty) {
+            let Type::Var { param } = ty else {
                 unreachable!()
             };
             return match param_index.get(param.as_str()) {
@@ -82,10 +82,10 @@ pub fn signature_fingerprint(definition: &NodeDefinition) -> String {
                 None => format!("?{param}"),
             };
         }
-        if !is_concrete(signal_type) {
+        if !is_concrete(ty) {
             return "?".into();
         }
-        let SignalType::Concrete { id, args } = signal_type else {
+        let Type::Concrete { id, args } = ty else {
             unreachable!()
         };
         if args.is_empty() {
@@ -106,7 +106,7 @@ pub fn signature_fingerprint(definition: &NodeDefinition) -> String {
         keys.into_iter()
             .map(|id| {
                 let port = &ports[&id];
-                format!("{id}:{}", type_key(&port.signal_type, param_index))
+                format!("{id}:{}", type_key(&port.ty, param_index))
             })
             .collect::<Vec<_>>()
             .join(";")

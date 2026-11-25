@@ -1,23 +1,23 @@
 //! Type-parameter bound checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
-use imp_core_types::{resolved_nodes, GraphSource, SignalType, TypeConstraint};
+use imp_core_types::{resolved_nodes, GraphSource, Type, TypeConstraint};
 use imp_registry::{get_type_constraint, Registry};
 
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
-use crate::resolve_implementation::signal_type_matches;
+use crate::resolve_implementation::type_matches;
 use crate::resolve_type_args::resolve_type_args;
 use crate::substitution::{is_any_type, rigid_parts, TypeCheckError};
-use crate::unify::format_signal_type;
+use crate::unify::format_type;
 
-fn satisfies_constraint(type_arg: &SignalType, constraint: &TypeConstraint) -> bool {
+fn satisfies_constraint(type_arg: &Type, constraint: &TypeConstraint) -> bool {
     if let Some((_, bounds)) = rigid_parts(type_arg) {
         return bounds.contains(&constraint.id.as_str());
     }
     constraint.members.iter().any(|member| {
-        let SignalType::Concrete { .. } = member else {
+        let Type::Concrete { .. } = member else {
             return false;
         };
-        signal_type_matches(member, type_arg)
+        type_matches(member, type_arg)
     })
 }
 
@@ -57,7 +57,7 @@ pub fn check_type_param_bounds<'a>(
             let Some(type_arg) = type_args.get(index) else {
                 continue;
             };
-            let SignalType::Concrete { .. } = type_arg else {
+            let Type::Concrete { .. } = type_arg else {
                 continue;
             };
 
@@ -81,7 +81,7 @@ pub fn check_type_param_bounds<'a>(
                         node.id.clone(),
                         format!(
                             "type argument {} does not satisfy bound \"{bound_id}\"",
-                            format_signal_type(type_arg)
+                            format_type(type_arg)
                         ),
                     ));
                 }
@@ -93,7 +93,7 @@ pub fn check_type_param_bounds<'a>(
 }
 
 /// A rigid type also satisfies `constraint` when every member of one of its own bounds does.
-fn rigid_implies(type_arg: &SignalType, constraint: &TypeConstraint, registry: &Registry) -> bool {
+fn rigid_implies(type_arg: &Type, constraint: &TypeConstraint, registry: &Registry) -> bool {
     let Some((_, bounds)) = rigid_parts(type_arg) else {
         return false;
     };

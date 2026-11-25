@@ -1,4 +1,4 @@
-//! Signal type helpers. Spec: imp-spec/docs/packages/imp-core-types/graph-model.md
+//! Type helpers. Spec: imp-spec/docs/packages/imp-core-types/graph-model.md
 
 use serde::{Deserialize, Serialize};
 
@@ -13,17 +13,17 @@ pub struct TypeParam {
     pub bounds: Vec<String>,
 }
 
-/// Imp signal type — concrete nominal type or type-variable reference.
+/// Imp type — concrete nominal type or type-variable reference.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum SignalType {
+pub enum Type {
     Var {
         param: TypeParamId,
     },
     Concrete {
         id: String,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        args: Vec<SignalType>,
+        args: Vec<Type>,
     },
 }
 
@@ -34,37 +34,37 @@ pub fn type_param(id: impl Into<String>) -> TypeParam {
     }
 }
 
-pub fn is_concrete(signal_type: &SignalType) -> bool {
-    matches!(signal_type, SignalType::Concrete { .. })
+pub fn is_concrete(ty: &Type) -> bool {
+    matches!(ty, Type::Concrete { .. })
 }
 
-pub fn is_type_var(signal_type: &SignalType) -> bool {
-    matches!(signal_type, SignalType::Var { .. })
+pub fn is_type_var(ty: &Type) -> bool {
+    matches!(ty, Type::Var { .. })
 }
 
-pub fn concrete_type(id: impl Into<String>, args: Vec<SignalType>) -> SignalType {
+pub fn concrete_type(id: impl Into<String>, args: Vec<Type>) -> Type {
     let id = id.into();
     if args.is_empty() {
-        SignalType::Concrete { id, args: vec![] }
+        Type::Concrete { id, args: vec![] }
     } else {
-        SignalType::Concrete { id, args }
+        Type::Concrete { id, args }
     }
 }
 
-pub fn type_var(param: impl Into<String>) -> SignalType {
-    SignalType::Var {
+pub fn type_var(param: impl Into<String>) -> Type {
+    Type::Var {
         param: param.into(),
     }
 }
 
-pub fn collection_of(element: SignalType) -> SignalType {
+pub fn collection_of(element: Type) -> Type {
     concrete_type("collection", vec![element])
 }
 
-pub fn list_of(element: SignalType) -> SignalType {
+pub fn list_of(element: Type) -> Type {
     concrete_type("list", vec![element])
 }
 
-pub fn set_of(element: SignalType) -> SignalType {
+pub fn set_of(element: Type) -> Type {
     concrete_type("set", vec![element])
 }

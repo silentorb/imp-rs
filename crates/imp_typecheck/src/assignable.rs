@@ -1,15 +1,15 @@
 //! Edge assignability (directional). Spec: imp-spec/docs/packages/imp-typecheck/type-system.md
 
-use imp_core_types::SignalType;
+use imp_core_types::Type;
 
 use crate::subtype::is_subtype_id;
 use crate::substitution::{apply_substitution, Substitution};
-use crate::unify::{format_signal_type, unify, UnifyError};
+use crate::unify::{format_type, unify, UnifyError};
 
 /// Succeeds when a value of `source` may flow into a port of type `target`.
 pub fn assignable(
-    source: &SignalType,
-    target: &SignalType,
+    source: &Type,
+    target: &Type,
     subst: &Substitution,
 ) -> Result<Substitution, UnifyError> {
     match unify(source, target, subst) {
@@ -19,11 +19,11 @@ pub fn assignable(
             let b = apply_substitution(target, subst);
 
             let (
-                SignalType::Concrete {
+                Type::Concrete {
                     id: source_id,
                     args: source_args,
                 },
-                SignalType::Concrete {
+                Type::Concrete {
                     id: target_id,
                     args: target_args,
                 },
@@ -36,8 +36,8 @@ pub fn assignable(
                 return Err(UnifyError {
                     message: format!(
                         "cannot assign {} to {}",
-                        format_signal_type(&a),
-                        format_signal_type(&b)
+                        format_type(&a),
+                        format_type(&b)
                     ),
                 });
             }

@@ -3,23 +3,23 @@
 
 use imp_core_types::{
     concrete_type, list_of, set_of, type_param, type_var, NodeDefinition, NodeImplementation,
-    NodeLibrary, Port, Ports, PrimitiveValue, SignalType, TypeParam,
+    NodeLibrary, Port, Ports, PrimitiveValue, Type, TypeParam,
 };
 use std::collections::BTreeMap;
 
-fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>) -> Port {
+fn port(id: &str, ty: Type, default_value: Option<PrimitiveValue>) -> Port {
     Port {
         id: id.into(),
-        signal_type,
+        ty,
         default_value,
         variadic: false,
     }
 }
 
-fn variadic_port(id: &str, signal_type: SignalType) -> Port {
+fn variadic_port(id: &str, ty: Type) -> Port {
     Port {
         id: id.into(),
-        signal_type,
+        ty,
         default_value: None,
         variadic: true,
     }
@@ -29,18 +29,18 @@ fn type_param_t() -> Vec<TypeParam> {
     vec![type_param("T")]
 }
 
-fn list_t() -> SignalType {
+fn list_t() -> Type {
     list_of(type_var("T"))
 }
 
-fn set_t() -> SignalType {
+fn set_t() -> Type {
     set_of(type_var("T"))
 }
 
 fn kind_preserving(
     id: &str,
     implementation_id: &str,
-    container_type: SignalType,
+    container_type: Type,
     extra_inputs: Ports,
 ) -> NodeDefinition {
     let collection_port = port("collection", container_type.clone(), None);

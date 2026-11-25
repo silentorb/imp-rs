@@ -7,12 +7,12 @@ pub type NodeId = String;
 pub type EdgeId = String;
 pub type NodeTypeId = String;
 pub type PortId = String;
-pub type SignalTypeId = String;
+pub type TypeId = String;
 
-mod signal_type;
-pub use signal_type::{
+mod types;
+pub use types::{
     collection_of, concrete_type, is_concrete, is_type_var, list_of, set_of, type_param, type_var,
-    SignalType, TypeParam, TypeParamId,
+    Type, TypeParam, TypeParamId,
 };
 
 /// Literal value for instance inputs or port defaults.
@@ -25,13 +25,13 @@ pub enum PrimitiveValue {
     Null,
 }
 
-/// One port template: identity + signal type + optional default + optional variadic.
+/// One port template: identity + type + optional default + optional variadic.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Port {
     pub id: PortId,
     #[serde(rename = "type")]
-    pub signal_type: SignalType,
+    pub ty: Type,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_value: Option<PrimitiveValue>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -62,7 +62,7 @@ pub struct Node {
     #[serde(rename = "type")]
     pub node_type: NodeTypeId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub type_args: Vec<SignalType>,
+    pub type_args: Vec<Type>,
     #[serde(default)]
     pub inputs: InputValues,
 }

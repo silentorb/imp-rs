@@ -3,27 +3,27 @@
 
 use imp_core_types::{
     concrete_type, core_node_library, type_var, BoundaryBindings, Edge, Graph, Node,
-    NodeDefinition, NodeLibrary, Port, PortReference, SignalType, TypeConstraint,
+    NodeDefinition, NodeLibrary, Port, PortReference, Type, TypeConstraint,
     TypeConstraintLibrary, TypeParam,
 };
 use imp_registry::{create_registry, load_library, load_type_constraint_library, Registry};
 use imp_typecheck::{check_definition, check_graph, resolve_type_args};
 use std::collections::BTreeMap;
 
-fn number() -> SignalType {
+fn number() -> Type {
     concrete_type("number", vec![])
 }
 
-fn string() -> SignalType {
+fn string() -> Type {
     concrete_type("string", vec![])
 }
 
-fn port(id: &str, signal_type: SignalType, variadic: bool) -> (String, Port) {
+fn port(id: &str, ty: Type, variadic: bool) -> (String, Port) {
     (
         id.into(),
         Port {
             id: id.into(),
-            signal_type,
+            ty,
             default_value: None,
             variadic,
         },
@@ -113,7 +113,7 @@ fn registry() -> Registry {
     load_library(registry, library).expect("library")
 }
 
-fn node(id: &str, node_type: &str, type_args: Vec<SignalType>) -> (String, Node) {
+fn node(id: &str, node_type: &str, type_args: Vec<Type>) -> (String, Node) {
     (
         id.into(),
         Node {

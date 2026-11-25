@@ -21,7 +21,7 @@ fn passthrough_library() -> GraphLibrary {
                 "rows".into(),
                 Port {
                     id: "rows".into(),
-                    signal_type: imp_core_types::concrete_type("collection", vec![]),
+                    ty: imp_core_types::concrete_type("collection", vec![]),
                     default_value: None,
                             variadic: false,
         },
@@ -32,7 +32,7 @@ fn passthrough_library() -> GraphLibrary {
                 "rows".into(),
                 Port {
                     id: "rows".into(),
-                    signal_type: imp_core_types::concrete_type("collection", vec![]),
+                    ty: imp_core_types::concrete_type("collection", vec![]),
                     default_value: None,
                             variadic: false,
         },
@@ -306,7 +306,7 @@ fn variadic_list_passthrough_library() -> GraphLibrary {
                 "items".into(),
                 Port {
                     id: "items".into(),
-                    signal_type: concrete_type("collection", vec![]),
+                    ty: concrete_type("collection", vec![]),
                     default_value: None,
                     variadic: true,
                 },
@@ -317,7 +317,7 @@ fn variadic_list_passthrough_library() -> GraphLibrary {
                 "rows".into(),
                 Port {
                     id: "rows".into(),
-                    signal_type: list_of(concrete_type("collection", vec![])),
+                    ty: list_of(concrete_type("collection", vec![])),
                     default_value: None,
                     variadic: false,
                 },

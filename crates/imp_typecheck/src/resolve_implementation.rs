@@ -2,7 +2,7 @@
 
 use imp_core_types::{
     is_graph_backed_definition, GraphSource, ImplementationId, NodeDefinition, NodeImplementation,
-    SignalType,
+    Type,
 };
 use imp_registry::Registry;
 
@@ -23,8 +23,8 @@ pub fn effective_node_implementation(definition: &NodeDefinition) -> NodeImpleme
         .unwrap_or_else(|| NodeImplementation::default_for(&definition.id))
 }
 
-pub fn signal_type_matches(pattern: &SignalType, signal_type: &SignalType) -> bool {
-    let SignalType::Concrete {
+pub fn type_matches(pattern: &Type, ty: &Type) -> bool {
+    let Type::Concrete {
         id: pattern_id,
         args: pattern_args,
     } = pattern
@@ -32,10 +32,10 @@ pub fn signal_type_matches(pattern: &SignalType, signal_type: &SignalType) -> bo
         return false;
     };
 
-    let SignalType::Concrete {
+    let Type::Concrete {
         id: type_id,
         args: type_args,
-    } = signal_type
+    } = ty
     else {
         return false;
     };
@@ -55,7 +55,7 @@ pub fn signal_type_matches(pattern: &SignalType, signal_type: &SignalType) -> bo
     pattern_args
         .iter()
         .zip(type_args.iter())
-        .all(|(pattern_arg, type_arg)| signal_type_matches(pattern_arg, type_arg))
+        .all(|(pattern_arg, type_arg)| type_matches(pattern_arg, type_arg))
 }
 
 pub fn resolve_implementation<'a>(
@@ -114,7 +114,7 @@ pub fn resolve_implementation<'a>(
             })?;
 
             for case_entry in &cases {
-                if signal_type_matches(&case_entry.match_type, selected_arg) {
+                if type_matches(&case_entry.match_type, selected_arg) {
                     return Ok(case_entry.implementation.clone());
                 }
             }

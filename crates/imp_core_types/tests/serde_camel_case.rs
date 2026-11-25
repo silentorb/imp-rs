@@ -1,6 +1,6 @@
 //! JSON field names must match imp-spec / imp-ts (camelCase) exactly.
 
-use imp_core_types::{Graph, NodeDefinition, NodeLibrary, SignalType};
+use imp_core_types::{Graph, NodeDefinition, NodeLibrary, Type};
 use serde_json::{json, Value};
 
 fn round_trip<T>(value: &Value) -> (T, Value)
@@ -41,9 +41,9 @@ fn graph_with_type_args_round_trips_unchanged() {
     let (graph, reserialized): (Graph, _) = round_trip(&ts_graph);
     assert_eq!(
         graph.nodes["in"].type_args,
-        vec![SignalType::Concrete {
+        vec![Type::Concrete {
             id: "list".into(),
-            args: vec![SignalType::Concrete {
+            args: vec![Type::Concrete {
                 id: "number".into(),
                 args: vec![],
             }],

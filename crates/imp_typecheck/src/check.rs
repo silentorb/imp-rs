@@ -1,6 +1,6 @@
 //! Graph type checking.
 
-use imp_core_types::{resolved_nodes, Edge, GraphSource, Node, NodeDefinition, SignalType};
+use imp_core_types::{resolved_nodes, Edge, GraphSource, Node, NodeDefinition, Type};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::assignable::assignable;
@@ -10,10 +10,10 @@ use crate::graph_analysis::{
     resolve_selections, PortDirection,
 };
 use crate::substitution::{
-    apply_substitution, contains_type_var, scope_signal_type, unscoped_param, Substitution,
+    apply_substitution, contains_type_var, scope_type, unscoped_param, Substitution,
     TypeCheckError,
 };
-use crate::unify::format_signal_type;
+use crate::unify::format_type;
 
 /// Type-check a graph source. Pass `&graph` for a single serialized document.
 pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -> Vec<TypeCheckError> {
@@ -244,7 +244,7 @@ pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -
                         port_id.clone(),
                         format!(
                             "unresolved type parameter on output: {}",
-                            format_signal_type(&resolved)
+                            format_type(&resolved)
                         ),
                     ));
                 }
@@ -274,7 +274,7 @@ pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -
                         port_id.clone(),
                         format!(
                             "unresolved type parameter on input: {}",
-                            format_signal_type(&resolved)
+                            format_type(&resolved)
                         ),
                     ));
                 }
@@ -294,11 +294,11 @@ fn type_param_conflict(
     to_node: &Node,
     to_def: &NodeDefinition,
     edge: &Edge,
-    output_type: &SignalType,
-    input_type: &SignalType,
+    output_type: &Type,
+    input_type: &Type,
     subst: &Substitution,
 ) -> Option<String> {
-    let SignalType::Var { param } = input_type else {
+    let Type::Var { param } = input_type else {
         return None;
     };
     let bound = apply_substitution(input_type, subst);
@@ -317,7 +317,7 @@ fn type_param_conflict(
         })
         .find_map(|(_, other)| {
             let port = effective.inputs.get(&other.to.port)?;
-            let scoped = scope_signal_type(&port.signal_type, &to_node.id);
+            let scoped = scope_type(&port.ty, &to_node.id);
             (scoped == *input_type).then(|| other.to.port.clone())
         });
     let origin = match other_port {
@@ -327,8 +327,8 @@ fn type_param_conflict(
     Some(format!(
         "type parameter {} is {}{origin} but input {} receives {}",
         unscoped_param(param),
-        format_signal_type(&bound),
+        format_type(&bound),
         edge.to.port,
-        format_signal_type(&incoming),
+        format_type(&incoming),
     ))
 }

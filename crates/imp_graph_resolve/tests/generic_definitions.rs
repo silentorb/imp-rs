@@ -2,7 +2,7 @@
 
 use imp_core_types::{
     concrete_type, core_node_library, type_var, BoundaryBindings, Edge, Graph, GraphLibrary, Node,
-    NodeDefinition, NodeLibrary, Port, PortReference, SignalType, TypeConstraint,
+    NodeDefinition, NodeLibrary, Port, PortReference, Type, TypeConstraint,
     TypeConstraintLibrary, TypeParam,
 };
 use imp_graph_resolve::flatten_graph;
@@ -12,16 +12,16 @@ use imp_registry::{
 use imp_typecheck::{check_definition, check_graph, resolve_type_args};
 use std::collections::BTreeMap;
 
-fn number() -> SignalType {
+fn number() -> Type {
     concrete_type("number", vec![])
 }
 
-fn port(id: &str, signal_type: SignalType) -> (String, Port) {
+fn port(id: &str, ty: Type) -> (String, Port) {
     (
         id.into(),
         Port {
             id: id.into(),
-            signal_type,
+            ty,
             default_value: None,
             variadic: false,
         },

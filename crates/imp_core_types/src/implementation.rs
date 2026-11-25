@@ -1,6 +1,6 @@
 //! Node implementation dispatch. Spec: imp-spec/docs/packages/imp-core-types/node-libraries.md
 
-use crate::signal_type::SignalType;
+use crate::types::Type;
 use crate::NodeTypeId;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ pub type ImplementationId = String;
 #[serde(rename_all = "camelCase")]
 pub struct ImplementationCase {
     #[serde(rename = "match")]
-    pub match_type: SignalType,
+    pub match_type: Type,
     pub implementation: ImplementationId,
 }
 

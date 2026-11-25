@@ -2,14 +2,14 @@
 
 use imp_core_types::{
     collection_of, concrete_type, type_param, type_var, NodeDefinition, NodeImplementation,
-    NodeLibrary, Port, PrimitiveValue, SignalType,
+    NodeLibrary, Port, PrimitiveValue, Type,
 };
 use std::collections::BTreeMap;
 
-fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>) -> Port {
+fn port(id: &str, ty: Type, default_value: Option<PrimitiveValue>) -> Port {
     Port {
         id: id.into(),
-        signal_type,
+        ty,
         default_value,
                 variadic: false,
         }

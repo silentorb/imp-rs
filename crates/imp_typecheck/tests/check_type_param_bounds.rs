@@ -2,7 +2,7 @@
 
 use imp_core_types::{
     concrete_type, core_node_library, Edge, Graph, Node, NodeLibrary, NodeType, Port,
-    PortReference, SignalType, TypeConstraint, TypeConstraintLibrary, TypeParam,
+    PortReference, Type, TypeConstraint, TypeConstraintLibrary, TypeParam,
 };
 use imp_registry::{create_registry, load_library, load_type_constraint_library};
 use imp_typecheck::check_graph;
@@ -41,7 +41,7 @@ fn identity_library() -> NodeLibrary {
                 "value".into(),
                 Port {
                     id: "value".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },
@@ -50,7 +50,7 @@ fn identity_library() -> NodeLibrary {
                 "value".into(),
                 Port {
                     id: "value".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },
@@ -229,7 +229,7 @@ fn check_graph_reports_unknown_bound_id() {
                 "value".into(),
                 Port {
                     id: "value".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },
@@ -238,7 +238,7 @@ fn check_graph_reports_unknown_bound_id() {
                 "value".into(),
                 Port {
                     id: "value".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },
@@ -331,7 +331,7 @@ fn check_graph_matches_parametric_member_patterns() {
                 "collection".into(),
                 Port {
                     id: "collection".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },
@@ -340,7 +340,7 @@ fn check_graph_matches_parametric_member_patterns() {
                 "collection".into(),
                 Port {
                     id: "collection".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },

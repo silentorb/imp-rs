@@ -1,6 +1,6 @@
 //! Type constraint libraries. Spec: imp-spec/docs/packages/imp-core-types/type-constraints.md
 
-use crate::SignalType;
+use crate::Type;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -11,7 +11,7 @@ pub type TypeConstraintId = String;
 #[serde(rename_all = "camelCase")]
 pub struct TypeConstraint {
     pub id: TypeConstraintId,
-    pub members: Vec<SignalType>,
+    pub members: Vec<Type>,
 }
 
 /// Named declarative collection of `TypeConstraint`s.

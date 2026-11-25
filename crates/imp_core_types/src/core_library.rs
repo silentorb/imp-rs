@@ -2,23 +2,23 @@
 
 use crate::{
     concrete_type, list_of, type_param, type_var, NodeDefinition, NodeLibrary, Port, Ports,
-    PrimitiveValue, SignalType, TypeParam,
+    PrimitiveValue, Type, TypeParam,
 };
 use std::collections::BTreeMap;
 
-fn port(id: &str, signal_type: SignalType, default_value: Option<PrimitiveValue>) -> Port {
+fn port(id: &str, ty: Type, default_value: Option<PrimitiveValue>) -> Port {
     Port {
         id: id.into(),
-        signal_type,
+        ty,
         default_value,
         variadic: false,
     }
 }
 
-fn variadic_port(id: &str, signal_type: SignalType) -> Port {
+fn variadic_port(id: &str, ty: Type) -> Port {
     Port {
         id: id.into(),
-        signal_type,
+        ty,
         default_value: None,
         variadic: true,
     }

@@ -1,24 +1,24 @@
 //! NodeDefinition instantiation.
 
-use imp_core_types::{Graph, NodeDefinition, Port, Ports, SignalType};
+use imp_core_types::{Graph, NodeDefinition, Port, Ports, Type};
 
 use crate::substitution::assert_concrete_args;
 
 fn substitute_in_type(
-    signal_type: &SignalType,
+    ty: &Type,
     params: &[String],
-    args: &[SignalType],
-) -> Result<SignalType, String> {
-    match signal_type {
-        SignalType::Var { param } => {
+    args: &[Type],
+) -> Result<Type, String> {
+    match ty {
+        Type::Var { param } => {
             let index = params
                 .iter()
                 .position(|candidate| candidate == param)
                 .ok_or_else(|| format!("unknown type parameter \"{param}\""))?;
             Ok(args[index].clone())
         }
-        SignalType::Concrete { id, args: type_args } if !type_args.is_empty() => Ok(
-            SignalType::Concrete {
+        Type::Concrete { id, args: type_args } if !type_args.is_empty() => Ok(
+            Type::Concrete {
                 id: id.clone(),
                 args: type_args
                     .iter()
@@ -33,7 +33,7 @@ fn substitute_in_type(
 fn substitute_ports(
     ports: &Ports,
     params: &[String],
-    args: &[SignalType],
+    args: &[Type],
 ) -> Result<Ports, String> {
     let mut result = Ports::new();
     for (key, port) in ports {
@@ -41,7 +41,7 @@ fn substitute_ports(
             key.clone(),
             Port {
                 id: port.id.clone(),
-                signal_type: substitute_in_type(&port.signal_type, params, args)?,
+                ty: substitute_in_type(&port.ty, params, args)?,
                 default_value: port.default_value.clone(),
                 variadic: port.variadic,
             },
@@ -50,7 +50,7 @@ fn substitute_ports(
     Ok(result)
 }
 
-fn substitute_in_graph(graph: &Graph, params: &[String], args: &[SignalType]) -> Result<Graph, String> {
+fn substitute_in_graph(graph: &Graph, params: &[String], args: &[Type]) -> Result<Graph, String> {
     let mut nodes = graph.nodes.clone();
     for node in nodes.values_mut() {
         if !node.type_args.is_empty() {
@@ -69,14 +69,14 @@ fn substitute_in_graph(graph: &Graph, params: &[String], args: &[SignalType]) ->
 
 pub fn instantiate_node_type(
     definition: &NodeDefinition,
-    type_args: &[SignalType],
+    type_args: &[Type],
 ) -> Result<NodeDefinition, String> {
     instantiate_node_definition(definition, type_args)
 }
 
 pub fn instantiate_node_definition(
     definition: &NodeDefinition,
-    type_args: &[SignalType],
+    type_args: &[Type],
 ) -> Result<NodeDefinition, String> {
     let params: Vec<String> = definition
         .type_params

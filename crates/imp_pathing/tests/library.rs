@@ -12,7 +12,7 @@ fn traverse_uses_collection_ports() {
         .unwrap();
     assert_eq!(traverse.type_params, vec![imp_core_types::type_param("T")]);
     assert_eq!(
-        traverse.inputs.get("collection").unwrap().signal_type,
+        traverse.inputs.get("collection").unwrap().ty,
         imp_core_types::collection_of(imp_core_types::type_var("T"))
     );
 }

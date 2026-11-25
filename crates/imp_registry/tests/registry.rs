@@ -23,7 +23,7 @@ fn source_library() -> NodeLibrary {
                 "out".into(),
                 Port {
                     id: "out".into(),
-                    signal_type: concrete_type("signal", vec![]),
+                    ty: concrete_type("signal", vec![]),
                     default_value: None,
                 variadic: false,
                 },
@@ -46,7 +46,7 @@ fn sink_library() -> NodeLibrary {
                 "in".into(),
                 Port {
                     id: "in".into(),
-                    signal_type: concrete_type("signal", vec![]),
+                    ty: concrete_type("signal", vec![]),
                     default_value: None,
                 variadic: false,
                 },
@@ -71,7 +71,7 @@ fn conflicting_library() -> NodeLibrary {
                 "out".into(),
                 Port {
                     id: "out".into(),
-                    signal_type: concrete_type("signal", vec![]),
+                    ty: concrete_type("signal", vec![]),
                     default_value: None,
                 variadic: false,
                 },
@@ -133,7 +133,7 @@ fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
                 "collection".into(),
                 Port {
                     id: "collection".into(),
-                    signal_type: list_of(type_var("T")),
+                    ty: list_of(type_var("T")),
                     default_value: None,
                 variadic: false,
                 },
@@ -142,7 +142,7 @@ fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
                 "collection".into(),
                 Port {
                     id: "collection".into(),
-                    signal_type: list_of(type_var("T")),
+                    ty: list_of(type_var("T")),
                     default_value: None,
                 variadic: false,
                 },
@@ -162,7 +162,7 @@ fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
                 "collection".into(),
                 Port {
                     id: "collection".into(),
-                    signal_type: set_of(type_var("T")),
+                    ty: set_of(type_var("T")),
                     default_value: None,
                 variadic: false,
                 },
@@ -171,7 +171,7 @@ fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
                 "collection".into(),
                 Port {
                     id: "collection".into(),
-                    signal_type: set_of(type_var("T")),
+                    ty: set_of(type_var("T")),
                     default_value: None,
                 variadic: false,
                 },

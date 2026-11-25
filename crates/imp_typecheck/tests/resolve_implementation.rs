@@ -3,7 +3,7 @@
 use imp_collection_transforms::collection_transforms_library;
 use imp_core_types::{
     concrete_type, core_node_library, list_of, set_of, Edge, Graph, ImplementationCase, Node,
-    NodeImplementation, NodeLibrary, NodeType, Port, PortReference, SignalType, TypeParam,
+    NodeImplementation, NodeLibrary, NodeType, Port, PortReference, Type, TypeParam,
 };
 use imp_registry::{create_registry, load_library};
 use imp_typecheck::{resolve_implementation, resolve_type_args};
@@ -39,7 +39,7 @@ fn cast_library() -> NodeLibrary {
                 "value".into(),
                 Port {
                     id: "value".into(),
-                    signal_type: SignalType::Var { param: "T".into() },
+                    ty: Type::Var { param: "T".into() },
                     default_value: None,
                 variadic: false,
                 },
@@ -48,7 +48,7 @@ fn cast_library() -> NodeLibrary {
                 "value".into(),
                 Port {
                     id: "value".into(),
-                    signal_type: concrete_type("string", vec![]),
+                    ty: concrete_type("string", vec![]),
                     default_value: None,
                 variadic: false,
                 },

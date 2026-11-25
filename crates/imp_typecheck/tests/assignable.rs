@@ -6,7 +6,7 @@ use imp_core_types::{
     PortReference, PrimitiveValue,
 };
 use imp_registry::{create_registry, load_library};
-use imp_typecheck::{assignable, check_graph, signal_type_matches, unify, Substitution};
+use imp_typecheck::{assignable, check_graph, type_matches, unify, Substitution};
 
 #[test]
 fn list_is_assignable_to_collection_with_matching_args() {
@@ -39,12 +39,12 @@ fn unify_does_not_equate_list_and_collection() {
 }
 
 #[test]
-fn signal_type_matches_allows_subtype_against_supertype_pattern() {
-    assert!(signal_type_matches(
+fn type_matches_allows_subtype_against_supertype_pattern() {
+    assert!(type_matches(
         &collection_of(concrete_type("string", vec![])),
         &list_of(concrete_type("string", vec![])),
     ));
-    assert!(!signal_type_matches(
+    assert!(!type_matches(
         &list_of(concrete_type("string", vec![])),
         &collection_of(concrete_type("string", vec![])),
     ));

@@ -1,6 +1,6 @@
 //! Type-argument inference for implementation dispatch.
 
-use imp_core_types::{GraphSource, NodeId, SignalType};
+use imp_core_types::{GraphSource, NodeId, Type};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
@@ -11,7 +11,7 @@ pub fn resolve_type_args<'a>(
     node_id: &NodeId,
     registry: &Registry,
     selected: Option<&SelectedDefinitions>,
-) -> Option<Vec<SignalType>> {
+) -> Option<Vec<Type>> {
     let source: GraphSource<'a> = graph.into();
     let node = source.nodes.get_node(node_id)?;
     let overloads = get_node_definitions(registry, &node.node_type);
