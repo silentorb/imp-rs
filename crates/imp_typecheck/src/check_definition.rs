@@ -6,7 +6,10 @@ use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 
 use crate::check::check_graph;
 use crate::graph_analysis::{catalog_port_type, resolve_port_type, PortDirection};
-use crate::substitution::{scope_signal_type, Substitution, TypeCheckError};
+use crate::instantiate::instantiate_node_definition;
+use crate::substitution::{
+    contains_type_var, rigid_type, scope_signal_type, Substitution, TypeCheckError,
+};
 use crate::unify::unify;
 
 fn scope_definition_port(signal_type: &SignalType, definition_id: &str) -> SignalType {
@@ -17,6 +20,13 @@ pub fn check_definition(
     definition: &NodeDefinition,
     registry: &Registry,
 ) -> Vec<TypeCheckError> {
+    if !definition.type_params.is_empty() && is_graph_backed_definition(definition) {
+        return match rigid_definition(definition) {
+            Ok(rigid) => check_definition(&rigid, registry),
+            Err(message) => vec![TypeCheckError::for_definition(definition.id.clone(), message)],
+        };
+    }
+
     let mut errors = Vec::new();
 
     if !is_graph_backed_definition(definition) {
@@ -272,4 +282,49 @@ pub fn check_graph_definitions(registry: &Registry) -> Vec<TypeCheckError> {
     }
 
     errors
+}
+
+/// A generic graph-backed definition with each type parameter replaced by a rigid type, so its
+/// body is checked once for every instantiation. Bound boundary nodes without `typeArgs` take
+/// their declared port type (spec: Generic graph-backed definitions).
+fn rigid_definition(definition: &NodeDefinition) -> Result<NodeDefinition, String> {
+    let rigid_args: Vec<SignalType> = definition
+        .type_params
+        .iter()
+        .map(|param| rigid_type(&param.id, &param.bounds))
+        .collect();
+    let mut rigid = instantiate_node_definition(definition, &rigid_args)?;
+    let (Some(body), Some(bindings)) = (rigid.body.as_mut(), definition.bindings.as_ref()) else {
+        return Ok(rigid);
+    };
+    let boundaries = bindings
+        .inputs
+        .iter()
+        .filter_map(|(port_id, node_id)| {
+            let declared = definition.inputs.get(port_id)?;
+            let rigid_port = rigid.inputs.get(port_id)?;
+            let boundary_type = if declared.variadic {
+                imp_core_types::list_of(rigid_port.signal_type.clone())
+            } else {
+                rigid_port.signal_type.clone()
+            };
+            Some((node_id, &declared.signal_type, boundary_type))
+        })
+        .chain(bindings.outputs.iter().filter_map(|(port_id, node_id)| {
+            let declared = definition.outputs.get(port_id)?;
+            let rigid_port = rigid.outputs.get(port_id)?;
+            Some((node_id, &declared.signal_type, rigid_port.signal_type.clone()))
+        }))
+        .collect::<Vec<_>>();
+    for (node_id, declared_type, boundary_type) in boundaries {
+        if !contains_type_var(declared_type) {
+            continue;
+        }
+        if let Some(node) = body.nodes.get_mut(node_id) {
+            if node.type_args.is_empty() {
+                node.type_args = vec![boundary_type];
+            }
+        }
+    }
+    Ok(rigid)
 }

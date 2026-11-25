@@ -6,10 +6,13 @@ use imp_registry::{get_type_constraint, Registry};
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
 use crate::resolve_implementation::signal_type_matches;
 use crate::resolve_type_args::resolve_type_args;
-use crate::substitution::{is_any_type, TypeCheckError};
+use crate::substitution::{is_any_type, rigid_parts, TypeCheckError};
 use crate::unify::format_signal_type;
 
 fn satisfies_constraint(type_arg: &SignalType, constraint: &TypeConstraint) -> bool {
+    if let Some((_, bounds)) = rigid_parts(type_arg) {
+        return bounds.contains(&constraint.id.as_str());
+    }
     constraint.members.iter().any(|member| {
         let SignalType::Concrete { .. } = member else {
             return false;
@@ -71,7 +74,9 @@ pub fn check_type_param_bounds<'a>(
                     continue;
                 };
 
-                if !satisfies_constraint(type_arg, constraint) {
+                if !satisfies_constraint(type_arg, constraint)
+                    && !rigid_implies(type_arg, constraint, registry)
+                {
                     errors.push(TypeCheckError::at_node(
                         node.id.clone(),
                         format!(
@@ -85,4 +90,20 @@ pub fn check_type_param_bounds<'a>(
     }
 
     errors
+}
+
+/// A rigid type also satisfies `constraint` when every member of one of its own bounds does.
+fn rigid_implies(type_arg: &SignalType, constraint: &TypeConstraint, registry: &Registry) -> bool {
+    let Some((_, bounds)) = rigid_parts(type_arg) else {
+        return false;
+    };
+    bounds.iter().any(|bound| {
+        get_type_constraint(registry, bound).is_some_and(|own| {
+            !own.members.is_empty()
+                && own
+                    .members
+                    .iter()
+                    .all(|member| satisfies_constraint(member, constraint))
+        })
+    })
 }

@@ -1,6 +1,6 @@
 //! Graph type checking.
 
-use imp_core_types::{resolved_nodes, GraphSource};
+use imp_core_types::{resolved_nodes, Edge, GraphSource, Node, NodeDefinition, SignalType};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::assignable::assignable;
@@ -9,7 +9,10 @@ use crate::graph_analysis::{
     candidate_survives, catalog_port_type_from_definition, effective_definition, resolve_port_type,
     resolve_selections, PortDirection,
 };
-use crate::substitution::{contains_type_var, TypeCheckError};
+use crate::substitution::{
+    apply_substitution, contains_type_var, scope_signal_type, unscoped_param, Substitution,
+    TypeCheckError,
+};
 use crate::unify::format_signal_type;
 
 /// Type-check a graph source. Pass `&graph` for a single serialized document.
@@ -201,11 +204,23 @@ pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -
 
         match assignable(&output_type, &input_type, &edge_subst) {
             Ok(next) => edge_subst = next,
-            Err(err) => errors.push(TypeCheckError::at_port(
-                edge.to.node.clone(),
-                edge.to.port.clone(),
-                err.message,
-            )),
+            Err(err) => {
+                let message = type_param_conflict(
+                    source,
+                    &to_node,
+                    to_def,
+                    edge,
+                    &output_type,
+                    &input_type,
+                    &edge_subst,
+                )
+                .unwrap_or(err.message);
+                errors.push(TypeCheckError::at_port(
+                    edge.to.node.clone(),
+                    edge.to.port.clone(),
+                    message,
+                ))
+            }
         }
     }
 
@@ -270,4 +285,50 @@ pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -
     errors.extend(check_type_param_bounds(source, registry, Some(&selected)));
 
     errors
+}
+
+/// Describes a failed edge whose target port is a type parameter already bound through another
+/// input of the same node: names the parameter, both types and both ports.
+fn type_param_conflict(
+    source: GraphSource<'_>,
+    to_node: &Node,
+    to_def: &NodeDefinition,
+    edge: &Edge,
+    output_type: &SignalType,
+    input_type: &SignalType,
+    subst: &Substitution,
+) -> Option<String> {
+    let SignalType::Var { param } = input_type else {
+        return None;
+    };
+    let bound = apply_substitution(input_type, subst);
+    if contains_type_var(&bound) {
+        return None;
+    }
+    let incoming = apply_substitution(output_type, subst);
+    let effective = effective_definition(to_node, to_def)?;
+    let other_port = source
+        .edges
+        .edge_entries()
+        .into_iter()
+        .filter(|(_, other)| {
+            other.to.node == to_node.id
+                && (other.to.port != edge.to.port || other.from != edge.from)
+        })
+        .find_map(|(_, other)| {
+            let port = effective.inputs.get(&other.to.port)?;
+            let scoped = scope_signal_type(&port.signal_type, &to_node.id);
+            (scoped == *input_type).then(|| other.to.port.clone())
+        });
+    let origin = match other_port {
+        Some(port) => format!(" (from input {port})"),
+        None => String::new(),
+    };
+    Some(format!(
+        "type parameter {} is {}{origin} but input {} receives {}",
+        unscoped_param(param),
+        format_signal_type(&bound),
+        edge.to.port,
+        format_signal_type(&incoming),
+    ))
 }

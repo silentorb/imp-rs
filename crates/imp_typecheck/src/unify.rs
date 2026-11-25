@@ -4,7 +4,8 @@ use imp_core_types::SignalType;
 use thiserror::Error;
 
 use crate::substitution::{
-    any_signal, apply_substitution, bind_all_type_vars, contains_type_var, is_any_type, Substitution,
+    any_signal, apply_substitution, bind_all_type_vars, contains_type_var, is_any_type,
+    rigid_parts, Substitution,
 };
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -119,6 +120,9 @@ fn unify_var(
 }
 
 pub fn format_signal_type(signal_type: &SignalType) -> String {
+    if let Some((param, _)) = rigid_parts(signal_type) {
+        return param.to_string();
+    }
     match signal_type {
         SignalType::Var { param } => param.clone(),
         SignalType::Concrete { id, args } if args.is_empty() => id.clone(),

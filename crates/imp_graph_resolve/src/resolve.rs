@@ -5,7 +5,7 @@ use imp_core_types::{
     PortReference, SignalType,
 };
 use imp_registry::{get_node_definitions, list_node_definitions, Registry};
-use imp_typecheck::instantiate_node_definition;
+use imp_typecheck::{contains_type_var, instantiate_node_definition};
 use std::collections::BTreeMap;
 
 pub type SubgraphKey = String;
@@ -64,9 +64,23 @@ fn resolve_definition(node: &imp_core_types::Node, registry: &Registry) -> Resul
         ));
     }
     if node.type_args.is_empty() {
-        return Ok(def.clone());
+        return Ok(without_param_type_args(def));
     }
     instantiate_node_definition(def, &node.type_args)
+}
+
+/// A generic definition inlined without use-site `typeArgs`: body nodes drop `typeArgs` that
+/// reference the definition's parameters, so the flattened graph infers them from edges.
+fn without_param_type_args(def: &NodeDefinition) -> NodeDefinition {
+    let mut def = def.clone();
+    if let Some(body) = def.body.as_mut() {
+        for node in body.nodes.values_mut() {
+            if node.type_args.iter().any(contains_type_var) {
+                node.type_args.clear();
+            }
+        }
+    }
+    def
 }
 
 fn edges_from_boundary_output<'a>(body: &'a Graph, boundary_node_id: &NodeId) -> Vec<&'a Edge> {
@@ -191,7 +205,11 @@ fn expand_composite_instance(
                     id: pack_id.clone(),
                     title: None,
                     node_type: "pack".into(),
-                    type_args: vec![element_type],
+                    type_args: if contains_type_var(&element_type) {
+                        Vec::new()
+                    } else {
+                        vec![element_type]
+                    },
                     inputs: BTreeMap::new(),
                 },
             );

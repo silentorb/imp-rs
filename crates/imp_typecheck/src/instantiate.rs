@@ -43,8 +43,8 @@ fn substitute_ports(
                 id: port.id.clone(),
                 signal_type: substitute_in_type(&port.signal_type, params, args)?,
                 default_value: port.default_value.clone(),
-                        variadic: false,
-        },
+                variadic: port.variadic,
+            },
         );
     }
     Ok(result)

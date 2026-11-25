@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 use crate::assignable::assignable;
 use crate::instantiate::instantiate_node_type;
-use crate::substitution::{apply_substitution, scope_signal_type, Substitution};
+use crate::substitution::{apply_substitution, is_any_type, scope_signal_type, Substitution};
 
 pub type SelectedDefinitions = BTreeMap<NodeId, NodeDefinition>;
 
@@ -53,9 +53,13 @@ pub fn catalog_port_type(
     direction: PortDirection,
     selected: Option<&SelectedDefinitions>,
 ) -> Option<SignalType> {
+    // The raw (sole) definition: catalog_port_type_from_definition applies Node.typeArgs itself.
     let definition = selected
         .and_then(|map| map.get(&node.id).cloned())
-        .or_else(|| effective_node_type(node, registry))?;
+        .or_else(|| match get_node_definitions(registry, &node.node_type) {
+            [sole] => Some(sole.clone()),
+            _ => None,
+        })?;
     catalog_port_type_from_definition(node, &definition, port_id, direction)
 }
 
@@ -93,6 +97,9 @@ pub fn candidate_survives(
                 &edge.to.port,
                 PortDirection::Input,
             )?;
+            if targets_any(&input_type, &trial) {
+                continue;
+            }
             trial = assignable(&output_type, &input_type, &trial).ok()?;
         }
 
@@ -115,6 +122,9 @@ pub fn candidate_survives(
                 &edge.to.port,
                 PortDirection::Input,
             )?;
+            if targets_any(&input_type, &trial) {
+                continue;
+            }
             trial = assignable(&output_type, &input_type, &trial).ok()?;
         }
     }
@@ -150,74 +160,86 @@ pub fn resolve_selections<'a>(
         }
     }
 
-    let mut changed = true;
-    while changed {
-        changed = false;
+    // Edges into `any` ports are the weakest constraint: settle everything else first, then
+    // apply them (binding still-free variables to `any`) and settle again.
+    let mut include_any_targets = false;
+    loop {
+        let mut changed = true;
+        while changed {
+            changed = false;
 
-        for node in &nodes {
-            if selected.contains_key(&node.id) {
-                continue;
-            }
-            let overloads = get_node_definitions(registry, &node.node_type);
-            if overloads.len() <= 1 {
-                continue;
-            }
-
-            let mut survivors: Vec<(NodeDefinition, Substitution)> = Vec::new();
-            for candidate in overloads {
-                if let Some(trial) =
-                    candidate_survives(source, &node.id, candidate, registry, &selected, &subst)
-                {
-                    survivors.push((candidate.clone(), trial));
+            for node in &nodes {
+                if selected.contains_key(&node.id) {
+                    continue;
                 }
-            }
+                let overloads = get_node_definitions(registry, &node.node_type);
+                if overloads.len() <= 1 {
+                    continue;
+                }
 
-            if survivors.len() == 1 {
-                let (definition, next_subst) = survivors.remove(0);
-                selected.insert(node.id.clone(), definition);
-                subst = next_subst;
-                changed = true;
-            }
-        }
+                let mut survivors: Vec<(NodeDefinition, Substitution)> = Vec::new();
+                for candidate in overloads {
+                    if let Some(trial) =
+                        candidate_survives(source, &node.id, candidate, registry, &selected, &subst)
+                    {
+                        survivors.push((candidate.clone(), trial));
+                    }
+                }
 
-        for (_, edge) in source.edges.edge_entries() {
-            let Some(from_node) = source.nodes.get_node(&edge.from.node) else {
-                continue;
-            };
-            let Some(to_node) = source.nodes.get_node(&edge.to.node) else {
-                continue;
-            };
-            let Some(from_def) = selected.get(&from_node.id) else {
-                continue;
-            };
-            let Some(to_def) = selected.get(&to_node.id) else {
-                continue;
-            };
-
-            let Some(output_type) = catalog_port_type_from_definition(
-                &from_node,
-                from_def,
-                &edge.from.port,
-                PortDirection::Output,
-            ) else {
-                continue;
-            };
-            let Some(input_type) = catalog_port_type_from_definition(
-                &to_node,
-                to_def,
-                &edge.to.port,
-                PortDirection::Input,
-            ) else {
-                continue;
-            };
-
-            if let Ok(next) = assignable(&output_type, &input_type, &subst) {
-                if next != subst {
-                    subst = next;
+                if survivors.len() == 1 {
+                    let (definition, next_subst) = survivors.remove(0);
+                    selected.insert(node.id.clone(), definition);
+                    subst = next_subst;
                     changed = true;
                 }
             }
+
+            for (_, edge) in source.edges.edge_entries() {
+                let Some(from_node) = source.nodes.get_node(&edge.from.node) else {
+                    continue;
+                };
+                let Some(to_node) = source.nodes.get_node(&edge.to.node) else {
+                    continue;
+                };
+                let Some(from_def) = selected.get(&from_node.id) else {
+                    continue;
+                };
+                let Some(to_def) = selected.get(&to_node.id) else {
+                    continue;
+                };
+
+                let Some(output_type) = catalog_port_type_from_definition(
+                    &from_node,
+                    from_def,
+                    &edge.from.port,
+                    PortDirection::Output,
+                ) else {
+                    continue;
+                };
+                let Some(input_type) = catalog_port_type_from_definition(
+                    &to_node,
+                    to_def,
+                    &edge.to.port,
+                    PortDirection::Input,
+                ) else {
+                    continue;
+                };
+
+                if !include_any_targets && targets_any(&input_type, &subst) {
+                    continue;
+                }
+                if let Ok(next) = assignable(&output_type, &input_type, &subst) {
+                    if next != subst {
+                        subst = next;
+                        changed = true;
+                    }
+                }
+            }
         }
+        if include_any_targets {
+            break;
+        }
+        include_any_targets = true;
     }
 
     ResolveSelections {
@@ -286,4 +308,9 @@ pub fn resolve_port_type<'a>(
     }
 
     Some(apply_substitution(&input_type, &local_subst))
+}
+
+/// True when an edge's target port type is `any` under `subst` (the weakest inference constraint).
+fn targets_any(input_type: &SignalType, subst: &Substitution) -> bool {
+    is_any_type(&apply_substitution(input_type, subst))
 }

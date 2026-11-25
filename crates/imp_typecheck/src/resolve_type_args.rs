@@ -4,7 +4,7 @@ use imp_core_types::{GraphSource, NodeId, SignalType};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
-use crate::substitution::{apply_substitution, scoped_param};
+use crate::substitution::{apply_substitution, contains_type_var, scoped_param};
 
 pub fn resolve_type_args<'a>(
     graph: impl Into<GraphSource<'a>>,
@@ -45,10 +45,12 @@ pub fn resolve_type_args<'a>(
     for param in &definition.type_params {
         let scoped = scoped_param(&node.id, &param.id);
         let bound = subst.get(&scoped)?;
-        if matches!(bound, SignalType::Var { .. }) {
+        // A parameter bound to another variable is resolved once that variable is.
+        let resolved_type = apply_substitution(bound, &subst);
+        if contains_type_var(&resolved_type) {
             return None;
         }
-        resolved.push(apply_substitution(bound, &subst));
+        resolved.push(resolved_type);
     }
 
     Some(resolved)

@@ -144,3 +144,40 @@ pub fn assert_concrete_args(args: &[SignalType]) -> Result<(), String> {
 pub fn any_signal() -> SignalType {
     concrete_type("any", vec![])
 }
+
+/// Reserved concrete id for a rigid type parameter while checking a generic graph-backed
+/// definition's body. Never serialized; see type-system.md (Generic graph-backed definitions).
+pub const RIGID_TYPE_ID: &str = "$rigid";
+
+/// A rigid stand-in for definition type parameter `param` with its declared `bounds`.
+///
+/// Encoded as `$rigid<param, bound…>` so that it unifies only with itself.
+pub fn rigid_type(param: &str, bounds: &[String]) -> SignalType {
+    let mut args = vec![concrete_type(param, vec![])];
+    args.extend(bounds.iter().map(|bound| concrete_type(bound.as_str(), vec![])));
+    SignalType::Concrete {
+        id: RIGID_TYPE_ID.into(),
+        args,
+    }
+}
+
+/// The parameter id and bounds of a rigid type, or `None` for any other type.
+pub fn rigid_parts(signal_type: &SignalType) -> Option<(&str, Vec<&str>)> {
+    let SignalType::Concrete { id, args } = signal_type else {
+        return None;
+    };
+    if id != RIGID_TYPE_ID {
+        return None;
+    }
+    let mut ids = args.iter().filter_map(|arg| match arg {
+        SignalType::Concrete { id, .. } => Some(id.as_str()),
+        SignalType::Var { .. } => None,
+    });
+    let param = ids.next()?;
+    Some((param, ids.collect()))
+}
+
+/// The declared parameter id of a scoped type variable (`node::A` → `A`).
+pub fn unscoped_param(param: &str) -> &str {
+    param.rsplit("::").next().unwrap_or(param)
+}
