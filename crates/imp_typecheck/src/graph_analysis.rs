@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use crate::assignable::assignable;
 use crate::instantiate::instantiate_node_type;
+use crate::normalize::{normalize_node, normalized_registry, with_prepared};
 use crate::substitution::{apply_substitution, is_any_type, scope_type, Substitution};
 
 pub type SelectedDefinitions = BTreeMap<NodeId, NodeDefinition>;
@@ -25,11 +26,12 @@ pub fn effective_definition(node: &Node, definition: &NodeDefinition) -> Option<
 
 /// Prefer selected overload + [`effective_definition`].
 pub fn effective_node_type(node: &Node, registry: &Registry) -> Option<NodeDefinition> {
-    let overloads = get_node_definitions(registry, &node.node_type);
+    let registry = normalized_registry(registry);
+    let overloads = get_node_definitions(&registry, &node.node_type);
     if overloads.len() != 1 {
         return None;
     }
-    effective_definition(node, &overloads[0])
+    effective_definition(&normalize_node(node, &registry), &overloads[0])
 }
 
 pub fn catalog_port_type_from_definition(
@@ -54,13 +56,14 @@ pub fn catalog_port_type(
     selected: Option<&SelectedDefinitions>,
 ) -> Option<Type> {
     // The raw (sole) definition: catalog_port_type_from_definition applies Node.typeArgs itself.
+    let registry = normalized_registry(registry);
     let definition = selected
         .and_then(|map| map.get(&node.id).cloned())
-        .or_else(|| match get_node_definitions(registry, &node.node_type) {
+        .or_else(|| match get_node_definitions(&registry, &node.node_type) {
             [sole] => Some(sole.clone()),
             _ => None,
         })?;
-    catalog_port_type_from_definition(node, &definition, port_id, direction)
+    catalog_port_type_from_definition(&normalize_node(node, &registry), &definition, port_id, direction)
 }
 
 /// Try whether `candidate` is consistent with edges touching `node_id` whose
@@ -97,10 +100,7 @@ pub fn candidate_survives(
                 &edge.to.port,
                 PortDirection::Input,
             )?;
-            if targets_any(&input_type, &trial) {
-                continue;
-            }
-            trial = assignable(&output_type, &input_type, &trial).ok()?;
+            trial = try_edge(&output_type, &input_type, &trial)?;
         }
 
         if edge.from.node == *node_id {
@@ -122,10 +122,7 @@ pub fn candidate_survives(
                 &edge.to.port,
                 PortDirection::Input,
             )?;
-            if targets_any(&input_type, &trial) {
-                continue;
-            }
-            trial = assignable(&output_type, &input_type, &trial).ok()?;
+            trial = try_edge(&output_type, &input_type, &trial)?;
         }
     }
 
@@ -143,7 +140,10 @@ pub fn resolve_selections<'a>(
     graph: impl Into<GraphSource<'a>>,
     registry: &Registry,
 ) -> ResolveSelections {
-    let source = graph.into();
+    with_prepared(graph.into(), registry, resolve_selections_prepared)
+}
+
+fn resolve_selections_prepared(source: GraphSource<'_>, registry: &Registry) -> ResolveSelections {
     let nodes = resolved_nodes(source);
     let mut selected = SelectedDefinitions::new();
     let mut unknown_types = Vec::new();
@@ -160,9 +160,9 @@ pub fn resolve_selections<'a>(
         }
     }
 
-    // Edges into `any` ports are the weakest constraint: settle everything else first, then
-    // apply them (binding still-free variables to `any`) and settle again.
-    let mut include_any_targets = false;
+    // Edges into `any` or union ports are the weakest constraint: settle everything else first,
+    // then apply them (binding still-free variables to `any` or the whole union) and settle again.
+    let mut include_weak_targets = false;
     loop {
         let mut changed = true;
         while changed {
@@ -225,7 +225,7 @@ pub fn resolve_selections<'a>(
                     continue;
                 };
 
-                if !include_any_targets && targets_any(&input_type, &subst) {
+                if !include_weak_targets && targets_weak(&input_type, &subst) {
                     continue;
                 }
                 if let Ok(next) = assignable(&output_type, &input_type, &subst) {
@@ -236,10 +236,10 @@ pub fn resolve_selections<'a>(
                 }
             }
         }
-        if include_any_targets {
+        if include_weak_targets {
             break;
         }
-        include_any_targets = true;
+        include_weak_targets = true;
     }
 
     ResolveSelections {
@@ -264,7 +264,19 @@ pub fn resolve_port_type<'a>(
     subst: &Substitution,
     selected: Option<&SelectedDefinitions>,
 ) -> Option<Type> {
-    let source = graph.into();
+    with_prepared(graph.into(), registry, |source, registry| {
+        resolve_port_type_prepared(source, node_id, port_id, registry, subst, selected)
+    })
+}
+
+fn resolve_port_type_prepared(
+    source: GraphSource<'_>,
+    node_id: &NodeId,
+    port_id: &PortId,
+    registry: &Registry,
+    subst: &Substitution,
+    selected: Option<&SelectedDefinitions>,
+) -> Option<Type> {
     let node = source.nodes.get_node(node_id)?;
     let overloads = get_node_definitions(registry, &node.node_type);
     let definition = selected
@@ -310,7 +322,24 @@ pub fn resolve_port_type<'a>(
     Some(apply_substitution(&input_type, &local_subst))
 }
 
-/// True when an edge's target port type is `any` under `subst` (the weakest inference constraint).
-fn targets_any(input_type: &Type, subst: &Substitution) -> bool {
-    is_any_type(&apply_substitution(input_type, subst))
+/// True when an edge's target port type is `any` or a union under `subst` (the weakest inference
+/// constraints).
+fn targets_weak(input_type: &Type, subst: &Substitution) -> bool {
+    let resolved = apply_substitution(input_type, subst);
+    is_any_type(&resolved) || matches!(resolved, Type::Union { .. })
+}
+
+/// One edge of an overload trial. `any` targets are skipped; union targets must accept the source
+/// but do not bind anything (they are weak: see `resolve_selections`). Returns the next trial
+/// substitution, or `None` when the edge rules the candidate out.
+fn try_edge(output_type: &Type, input_type: &Type, trial: &Substitution) -> Option<Substitution> {
+    let resolved = apply_substitution(input_type, trial);
+    if is_any_type(&resolved) {
+        return Some(trial.clone());
+    }
+    let next = assignable(output_type, input_type, trial).ok()?;
+    if matches!(resolved, Type::Union { .. }) {
+        return Some(trial.clone());
+    }
+    Some(next)
 }

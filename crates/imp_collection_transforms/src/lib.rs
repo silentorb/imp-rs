@@ -246,6 +246,7 @@ pub fn collection_transforms_library() -> NodeLibrary {
     });
 
     NodeLibrary {
+        types: Vec::new(),
         id: "imp.collection.transforms".into(),
         definitions,
     }

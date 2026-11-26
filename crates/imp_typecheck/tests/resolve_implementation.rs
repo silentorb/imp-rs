@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 
 fn cast_library() -> NodeLibrary {
     NodeLibrary {
+        types: Vec::new(),
         id: "example.cast".into(),
         definitions: vec![NodeType {
             id: "cast".into(),

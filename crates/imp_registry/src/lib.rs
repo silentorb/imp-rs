@@ -1,9 +1,9 @@
-//! Registry for loading NodeLibrary and GraphLibrary catalogs.
+//! Registry for loading node libraries and type definitions.
 //! Spec: imp-spec/docs/packages/imp-registry/registry.md
 
 use imp_core_types::{
-    is_concrete, is_graph_backed_definition, is_type_var, GraphLibrary, NodeDefinition, NodeLibrary,
-    NodeTypeId, Port, Type, TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
+    is_graph_backed_definition, ImpFile, NodeDefinition, NodeLibrary, NodeTypeId, Port, Type,
+    TypeDefinition, TypeId,
 };
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -11,11 +11,15 @@ use thiserror::Error;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Registry {
     pub libraries: Vec<NodeLibrary>,
-    pub graph_libraries: Vec<GraphLibrary>,
-    pub type_constraint_libraries: Vec<TypeConstraintLibrary>,
+    pub imp_files: Vec<ImpFile>,
     /// Overload sets keyed by NodeTypeId.
     pub definitions: BTreeMap<NodeTypeId, Vec<NodeDefinition>>,
-    pub type_constraints: BTreeMap<TypeConstraintId, TypeConstraint>,
+    /// The single global type namespace: type definitions from every loaded library.
+    pub type_definitions: BTreeMap<TypeId, TypeDefinition>,
+    /// Set on the normalized view `imp_typecheck` derives (every definition's types expanded);
+    /// hosts leave it `false`.
+    #[doc(hidden)]
+    pub normalized: bool,
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -28,38 +32,19 @@ pub struct DuplicateNodeTypeError {
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
-#[error(
-    "TypeConstraintId \"{constraint_id}\" is already registered (loading library \"{library_id}\")"
-)]
-pub struct DuplicateTypeConstraintError {
-    pub constraint_id: String,
+#[error("TypeId \"{type_id}\" is already defined (loading library \"{library_id}\")")]
+pub struct DuplicateTypeError {
+    pub type_id: String,
     pub library_id: String,
-}
-
-#[derive(Debug, Error, PartialEq, Eq)]
-pub struct InvalidGraphLibraryError {
-    pub definition_id: String,
-    pub library_id: String,
-    pub message: String,
-}
-
-impl std::fmt::Display for InvalidGraphLibraryError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "GraphLibrary \"{}\" entry \"{}\": {}",
-            self.library_id, self.definition_id, self.message
-        )
-    }
 }
 
 pub fn create_registry() -> Registry {
     Registry {
         libraries: Vec::new(),
-        graph_libraries: Vec::new(),
-        type_constraint_libraries: Vec::new(),
+        imp_files: Vec::new(),
         definitions: BTreeMap::new(),
-        type_constraints: BTreeMap::new(),
+        type_definitions: BTreeMap::new(),
+        normalized: false,
     }
 }
 
@@ -73,30 +58,20 @@ pub fn signature_fingerprint(definition: &NodeDefinition) -> String {
         .collect();
 
     fn type_key(ty: &Type, param_index: &BTreeMap<&str, usize>) -> String {
-        if is_type_var(ty) {
-            let Type::Var { param } = ty else {
-                unreachable!()
-            };
-            return match param_index.get(param.as_str()) {
+        let key = |types: &[Type]| {
+            types
+                .iter()
+                .map(|t| type_key(t, param_index))
+                .collect::<Vec<_>>()
+        };
+        match ty {
+            Type::Var { param } => match param_index.get(param.as_str()) {
                 Some(index) => format!("#{index}"),
                 None => format!("?{param}"),
-            };
-        }
-        if !is_concrete(ty) {
-            return "?".into();
-        }
-        let Type::Concrete { id, args } = ty else {
-            unreachable!()
-        };
-        if args.is_empty() {
-            id.clone()
-        } else {
-            let args_key = args
-                .iter()
-                .map(|arg| type_key(arg, param_index))
-                .collect::<Vec<_>>()
-                .join(",");
-            format!("{id}<{args_key}>")
+            },
+            Type::Concrete { id, args } if args.is_empty() => id.clone(),
+            Type::Concrete { id, args } => format!("{id}<{}>", key(args).join(",")),
+            Type::Union { union } => format!("({})", key(union).join("|")),
         }
     }
 
@@ -124,6 +99,7 @@ fn merge_definitions(
     library_id: &str,
     definitions: Vec<NodeDefinition>,
 ) -> Result<Registry, DuplicateNodeTypeError> {
+    registry.normalized = false;
     for definition in definitions {
         let existing = registry
             .definitions
@@ -143,69 +119,48 @@ fn merge_definitions(
     Ok(registry)
 }
 
-pub fn load_node_library(
-    registry: Registry,
-    library: NodeLibrary,
-) -> Result<Registry, DuplicateNodeTypeError> {
+/// Merges type definitions into the global namespace; a duplicate `TypeId` is an error.
+fn merge_types(
+    mut registry: Registry,
+    library_id: &str,
+    types: &[TypeDefinition],
+) -> Result<Registry, DuplicateTypeError> {
+    registry.normalized = false;
+    for definition in types {
+        if registry.type_definitions.contains_key(&definition.id) {
+            return Err(DuplicateTypeError {
+                type_id: definition.id.clone(),
+                library_id: library_id.into(),
+            });
+        }
+        registry
+            .type_definitions
+            .insert(definition.id.clone(), definition.clone());
+    }
+    Ok(registry)
+}
+
+pub fn load_node_library(registry: Registry, library: NodeLibrary) -> Result<Registry, RegistryError> {
     let library_id = library.id.clone();
+    let registry = merge_types(registry, &library_id, &library.types)?;
     let definitions = library.definitions.clone();
     let mut registry = merge_definitions(registry, &library_id, definitions)?;
     registry.libraries.push(library);
     Ok(registry)
 }
 
-pub fn load_library(
-    registry: Registry,
-    library: NodeLibrary,
-) -> Result<Registry, DuplicateNodeTypeError> {
+pub fn load_library(registry: Registry, library: NodeLibrary) -> Result<Registry, RegistryError> {
     load_node_library(registry, library)
 }
 
-pub fn load_graph_library(
-    registry: Registry,
-    library: GraphLibrary,
-) -> Result<Registry, RegistryError> {
-    for definition in &library.definitions {
-        if !is_graph_backed_definition(definition) {
-            return Err(RegistryError::InvalidGraphLibrary(InvalidGraphLibraryError {
-                library_id: library.id.clone(),
-                definition_id: definition.id.clone(),
-                message: "must include body and bindings".into(),
-            }));
-        }
-    }
-    let mut registry = merge_definitions(registry, &library.id, library.definitions.clone())
-        .map_err(RegistryError::DuplicateNodeType)?;
-    registry.graph_libraries.push(library);
+/// Merges an Imp file's `types` and `definitions` (primitive or graph-backed) into the registry.
+/// Its `nodes` / `edges` are topology, not registry content (see `imp_file_graph_source`).
+pub fn load_imp_file(registry: Registry, file: ImpFile) -> Result<Registry, RegistryError> {
+    let label = file.id.clone().unwrap_or_else(|| "(Imp file)".into());
+    let registry = merge_types(registry, &label, &file.types)?;
+    let mut registry = merge_definitions(registry, &label, file.definitions.clone())?;
+    registry.imp_files.push(file);
     Ok(registry)
-}
-
-pub fn load_type_constraint_library(
-    registry: Registry,
-    library: TypeConstraintLibrary,
-) -> Result<Registry, DuplicateTypeConstraintError> {
-    let mut type_constraints = registry.type_constraints.clone();
-
-    for (key, constraint) in &library.constraints {
-        if type_constraints.contains_key(key) {
-            return Err(DuplicateTypeConstraintError {
-                constraint_id: key.clone(),
-                library_id: library.id.clone(),
-            });
-        }
-        type_constraints.insert(key.clone(), constraint.clone());
-    }
-
-    let mut type_constraint_libraries = registry.type_constraint_libraries.clone();
-    type_constraint_libraries.push(library);
-
-    Ok(Registry {
-        libraries: registry.libraries,
-        graph_libraries: registry.graph_libraries,
-        type_constraint_libraries,
-        definitions: registry.definitions,
-        type_constraints,
-    })
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -213,7 +168,7 @@ pub enum RegistryError {
     #[error(transparent)]
     DuplicateNodeType(#[from] DuplicateNodeTypeError),
     #[error(transparent)]
-    InvalidGraphLibrary(#[from] InvalidGraphLibraryError),
+    DuplicateType(#[from] DuplicateTypeError),
 }
 
 /// Returns the overload set for `type_id`, or an empty slice if unknown.
@@ -242,11 +197,8 @@ pub fn get_node_type<'a>(registry: &'a Registry, type_id: &str) -> Option<&'a No
     get_node_definition(registry, type_id)
 }
 
-pub fn get_type_constraint<'a>(
-    registry: &'a Registry,
-    constraint_id: &str,
-) -> Option<&'a TypeConstraint> {
-    registry.type_constraints.get(constraint_id)
+pub fn get_type_definition<'a>(registry: &'a Registry, type_id: &str) -> Option<&'a TypeDefinition> {
+    registry.type_definitions.get(type_id)
 }
 
 pub fn list_node_definitions(registry: &Registry) -> Vec<&NodeDefinition> {
@@ -261,20 +213,16 @@ pub fn list_node_types(registry: &Registry) -> Vec<&NodeDefinition> {
     list_node_definitions(registry)
 }
 
-pub fn list_type_constraints(registry: &Registry) -> Vec<&TypeConstraint> {
-    registry.type_constraints.values().collect()
+pub fn list_type_definitions(registry: &Registry) -> Vec<&TypeDefinition> {
+    registry.type_definitions.values().collect()
 }
 
 pub fn list_libraries(registry: &Registry) -> &[NodeLibrary] {
     &registry.libraries
 }
 
-pub fn list_graph_libraries(registry: &Registry) -> &[GraphLibrary] {
-    &registry.graph_libraries
-}
-
-pub fn list_type_constraint_libraries(registry: &Registry) -> &[TypeConstraintLibrary] {
-    &registry.type_constraint_libraries
+pub fn list_imp_files(registry: &Registry) -> &[ImpFile] {
+    &registry.imp_files
 }
 
 pub fn has_graph_backed_definitions(registry: &Registry) -> bool {

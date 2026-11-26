@@ -35,6 +35,7 @@ pub fn core_node_library() -> NodeLibrary {
     let any = concrete_type("any", vec![]);
 
     NodeLibrary {
+        types: Vec::new(),
         id: "imp.core".into(),
         definitions: vec![
             NodeDefinition {

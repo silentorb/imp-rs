@@ -3,15 +3,15 @@
 use imp_collection_transforms::collection_transforms_library;
 use imp_core_types::core_node_library;
 use imp_graph_resolve::{build_execution_program, flatten_graph, subgraph_key};
-use imp_registry::{create_registry, load_graph_library, load_node_library, Registry};
+use imp_registry::{create_registry, load_imp_file, load_node_library, Registry};
 use imp_core_types::{
-    concrete_type, list_of, BoundaryBindings, Graph, GraphLibrary, Node, NodeDefinition, Port,
+    concrete_type, list_of, BoundaryBindings, Graph, ImpFile, Node, NodeDefinition, Port,
     PortReference,
 };
 
-fn passthrough_library() -> GraphLibrary {
-    GraphLibrary {
-        id: "example.graphs".into(),
+fn passthrough_library() -> ImpFile {
+    ImpFile {
+        id: Some("example.graphs".into()),
         definitions: vec![NodeDefinition {
             id: "passthrough".into(),
             name: None,
@@ -87,6 +87,7 @@ fn passthrough_library() -> GraphLibrary {
                 .collect(),
             }),
         }],
+        ..ImpFile::default()
     }
 }
 
@@ -94,7 +95,7 @@ fn build_registry() -> Registry {
     let registry = create_registry();
     let registry = load_node_library(registry, core_node_library()).unwrap();
     let registry = load_node_library(registry, collection_transforms_library()).unwrap();
-    load_graph_library(registry, passthrough_library()).unwrap()
+    load_imp_file(registry, passthrough_library()).unwrap()
 }
 
 #[test]
@@ -294,9 +295,9 @@ fn build_execution_program_deduplicates_shared_subgraphs() {
     );
 }
 
-fn variadic_list_passthrough_library() -> GraphLibrary {
-    GraphLibrary {
-        id: "example.variadic".into(),
+fn variadic_list_passthrough_library() -> ImpFile {
+    ImpFile {
+        id: Some("example.variadic".into()),
         definitions: vec![NodeDefinition {
             id: "list_passthrough".into(),
             name: None,
@@ -371,6 +372,7 @@ fn variadic_list_passthrough_library() -> GraphLibrary {
                 .collect(),
             }),
         }],
+        ..ImpFile::default()
     }
 }
 
@@ -379,7 +381,7 @@ fn flatten_graph_inserts_pack_for_variadic_composite_input() {
     let registry = create_registry();
     let registry = load_node_library(registry, core_node_library()).unwrap();
     let registry = load_node_library(registry, collection_transforms_library()).unwrap();
-    let registry = load_graph_library(registry, variadic_list_passthrough_library()).unwrap();
+    let registry = load_imp_file(registry, variadic_list_passthrough_library()).unwrap();
 
     let graph = Graph {
         nodes: [

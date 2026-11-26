@@ -4,7 +4,9 @@ use imp_core_types::{resolved_nodes, Edge, GraphSource, Node, NodeDefinition, Ty
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::assignable::assignable;
+use crate::check_type_definitions::type_reference_problems;
 use crate::check_type_param_bounds::check_type_param_bounds;
+use crate::normalize::with_prepared;
 use crate::graph_analysis::{
     candidate_survives, catalog_port_type_from_definition, effective_definition, resolve_port_type,
     resolve_selections, PortDirection,
@@ -17,7 +19,10 @@ use crate::unify::format_type;
 
 /// Type-check a graph source. Pass `&graph` for a single serialized document.
 pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -> Vec<TypeCheckError> {
-    let source: GraphSource<'a> = graph.into();
+    with_prepared(graph.into(), registry, check_graph_prepared)
+}
+
+fn check_graph_prepared(source: GraphSource<'_>, registry: &Registry) -> Vec<TypeCheckError> {
     let nodes = resolved_nodes(source);
     let mut errors = Vec::new();
     let resolved = resolve_selections(source, registry);
@@ -78,6 +83,16 @@ pub fn check_graph<'a>(graph: impl Into<GraphSource<'a>>, registry: &Registry) -
         }
 
         let definition = selected.get(&node.id).unwrap();
+        let mut seen = std::collections::BTreeSet::new();
+        for problem in node
+            .type_args
+            .iter()
+            .flat_map(|arg| type_reference_problems(arg, registry))
+        {
+            if seen.insert(problem.clone()) {
+                errors.push(TypeCheckError::at_node(node.id.clone(), problem));
+            }
+        }
         if !node.type_args.is_empty() {
             let expected = definition.type_params.len();
             if node.type_args.len() != expected {

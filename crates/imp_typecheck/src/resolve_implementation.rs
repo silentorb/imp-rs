@@ -8,7 +8,9 @@ use imp_registry::Registry;
 
 use crate::graph_analysis::resolve_selections;
 use crate::resolve_type_args::resolve_type_args;
-use crate::subtype::is_subtype_id;
+use crate::assignable::assignable;
+use crate::normalize::with_prepared;
+use crate::substitution::Substitution;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImplementationResolveError {
@@ -23,39 +25,10 @@ pub fn effective_node_implementation(definition: &NodeDefinition) -> NodeImpleme
         .unwrap_or_else(|| NodeImplementation::default_for(&definition.id))
 }
 
+/// Whether a (normalized) type argument matches a dispatch or bound pattern: it is assignable to
+/// the pattern. `{ "id": "any" }` matches every type; a union pattern matches any of its members.
 pub fn type_matches(pattern: &Type, ty: &Type) -> bool {
-    let Type::Concrete {
-        id: pattern_id,
-        args: pattern_args,
-    } = pattern
-    else {
-        return false;
-    };
-
-    let Type::Concrete {
-        id: type_id,
-        args: type_args,
-    } = ty
-    else {
-        return false;
-    };
-
-    if pattern_id == "any" {
-        return true;
-    }
-
-    if pattern_id != type_id && !is_subtype_id(type_id, pattern_id) {
-        return false;
-    }
-
-    if pattern_args.len() != type_args.len() {
-        return false;
-    }
-
-    pattern_args
-        .iter()
-        .zip(type_args.iter())
-        .all(|(pattern_arg, type_arg)| type_matches(pattern_arg, type_arg))
+    assignable(ty, pattern, &Substitution::new()).is_ok()
 }
 
 pub fn resolve_implementation<'a>(
@@ -63,7 +36,16 @@ pub fn resolve_implementation<'a>(
     node_id: &str,
     registry: &Registry,
 ) -> Result<ImplementationId, ImplementationResolveError> {
-    let source: GraphSource<'a> = graph.into();
+    with_prepared(graph.into(), registry, |source, registry| {
+        resolve_prepared(source, node_id, registry)
+    })
+}
+
+fn resolve_prepared(
+    source: GraphSource<'_>,
+    node_id: &str,
+    registry: &Registry,
+) -> Result<ImplementationId, ImplementationResolveError> {
     let node = source.nodes.get_node(&node_id.to_string()).ok_or_else(|| ImplementationResolveError {
         node_id: None,
         message: format!("unknown node \"{node_id}\""),

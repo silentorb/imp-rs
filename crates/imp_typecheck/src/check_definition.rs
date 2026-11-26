@@ -5,6 +5,8 @@ use imp_core_types::{is_graph_backed_definition, Graph, NodeDefinition, Type};
 use imp_registry::{get_node_definitions, list_node_definitions, Registry};
 
 use crate::check::check_graph;
+use crate::check_type_definitions::check_type_definitions;
+use crate::normalize::{normalize_definition, normalized_registry};
 use crate::graph_analysis::{catalog_port_type, resolve_port_type, PortDirection};
 use crate::instantiate::instantiate_node_definition;
 use crate::substitution::{
@@ -20,6 +22,10 @@ pub fn check_definition(
     definition: &NodeDefinition,
     registry: &Registry,
 ) -> Vec<TypeCheckError> {
+    let normalized = normalized_registry(registry);
+    let registry: &Registry = &normalized;
+    let normalized_definition = normalize_definition(definition, registry);
+    let definition = &normalized_definition;
     if !definition.type_params.is_empty() && is_graph_backed_definition(definition) {
         return match rigid_definition(definition) {
             Ok(rigid) => check_definition(&rigid, registry),
@@ -262,7 +268,10 @@ fn detect_definition_cycle(
 }
 
 pub fn check_graph_definitions(registry: &Registry) -> Vec<TypeCheckError> {
-    let mut errors = Vec::new();
+    // Type definitions first: every later check reads normalized (expanded) types.
+    let mut errors = check_type_definitions(registry);
+    let normalized = normalized_registry(registry);
+    let registry: &Registry = &normalized;
 
     for definition in list_node_definitions(registry) {
         if !is_graph_backed_definition(definition) {

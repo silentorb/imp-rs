@@ -57,7 +57,7 @@ fn node_definition_with_default_value_and_type_params_round_trips_unchanged() {
     let ts_definition = json!({
         "id": "scale",
         "name": "Scale",
-        "typeParams": [{ "id": "T", "bounds": ["Scalar"] }],
+        "typeParams": [{ "id": "T", "bounds": [{ "id": "Scalar" }] }],
         "implementation": {
             "kind": "dispatch",
             "paramIndex": 0,
@@ -135,4 +135,34 @@ fn snake_case_keys_are_not_emitted() {
     for key in ["type_params", "default_value", "type_args", "param_index"] {
         assert!(!text.contains(key), "unexpected snake_case key {key} in {text}");
     }
+}
+
+#[test]
+fn union_types_and_type_definitions_round_trip_unchanged() {
+    let ts_library = json!({
+        "id": "example.audio",
+        "definitions": [],
+        "types": [
+            {
+                "id": "Audio",
+                "type": { "union": [{ "id": "audio_mono" }, { "id": "audio_stereo" }] }
+            },
+            {
+                "id": "Pair",
+                "params": [{ "id": "T" }],
+                "type": { "id": "list", "args": [{ "param": "T" }] }
+            }
+        ]
+    });
+
+    let (library, reserialized): (imp_core_types::NodeLibrary, _) = round_trip(&ts_library);
+    assert_eq!(library.types.len(), 2);
+    assert_eq!(
+        library.types[0].ty,
+        imp_core_types::union_of(vec![
+            imp_core_types::concrete_type("audio_mono", vec![]),
+            imp_core_types::concrete_type("audio_stereo", vec![]),
+        ])
+    );
+    assert_eq!(reserialized, ts_library);
 }

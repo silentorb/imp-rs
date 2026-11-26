@@ -1,6 +1,6 @@
 [package]
-name = "imp_graph_library"
-description = "JSON graph library parsing for Imp"
+name = "imp_file"
+description = "Imp file parsing, validation and serialization"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

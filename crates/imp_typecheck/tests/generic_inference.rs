@@ -3,10 +3,9 @@
 
 use imp_core_types::{
     concrete_type, core_node_library, type_var, BoundaryBindings, Edge, Graph, Node,
-    NodeDefinition, NodeLibrary, Port, PortReference, Type, TypeConstraint,
-    TypeConstraintLibrary, TypeParam,
+    NodeDefinition, NodeLibrary, Port, PortReference, Type, TypeDefinition, TypeParam,
 };
-use imp_registry::{create_registry, load_library, load_type_constraint_library, Registry};
+use imp_registry::{create_registry, load_library, Registry};
 use imp_typecheck::{check_definition, check_graph, resolve_type_args};
 use std::collections::BTreeMap;
 
@@ -43,7 +42,7 @@ fn definition(
             .map(|bound| {
                 vec![TypeParam {
                     id: "A".into(),
-                    bounds: vec![bound.into()],
+                    bounds: vec![concrete_type(bound, vec![])],
                 }]
             })
             .unwrap_or_default(),
@@ -59,6 +58,7 @@ fn definition(
 fn registry() -> Registry {
     let a = type_var("A");
     let library = NodeLibrary {
+        types: Vec::new(),
         id: "example.generic".into(),
         definitions: vec![
             definition("number_source", None, vec![], vec![port("value", number(), false)]),
@@ -89,27 +89,22 @@ fn registry() -> Registry {
             ),
         ],
     };
-    let constraints = TypeConstraintLibrary {
-        id: "example.constraints".into(),
-        constraints: BTreeMap::from([
-            (
-                "Scalar".into(),
-                TypeConstraint {
-                    id: "Scalar".into(),
-                    members: vec![number(), string()],
-                },
-            ),
-            (
-                "Numeric".into(),
-                TypeConstraint {
-                    id: "Numeric".into(),
-                    members: vec![number()],
-                },
-            ),
-        ]),
+    let library = NodeLibrary {
+        types: vec![
+            TypeDefinition {
+                id: "Scalar".into(),
+                params: vec![],
+                ty: imp_core_types::union_of(vec![number(), string()]),
+            },
+            TypeDefinition {
+                id: "Numeric".into(),
+                params: vec![],
+                ty: number(),
+            },
+        ],
+        ..library
     };
     let registry = load_library(create_registry(), core_node_library()).expect("core");
-    let registry = load_type_constraint_library(registry, constraints).expect("constraints");
     load_library(registry, library).expect("library")
 }
 
@@ -345,7 +340,7 @@ fn generic_definition_bounds_must_imply_inner_bounds() {
     assert!(
         errors
             .iter()
-            .any(|error| error.message == "type argument A does not satisfy bound \"Numeric\""),
+            .any(|error| error.message == "type argument A does not satisfy bound number"),
         "{errors:?}"
     );
 }

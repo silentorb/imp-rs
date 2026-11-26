@@ -2,37 +2,34 @@
 
 use imp_core_types::{
     concrete_type, core_node_library, Edge, Graph, Node, NodeLibrary, NodeType, Port,
-    PortReference, Type, TypeConstraint, TypeConstraintLibrary, TypeParam,
+    PortReference, Type, TypeDefinition, TypeParam,
 };
-use imp_registry::{create_registry, load_library, load_type_constraint_library};
+use imp_registry::{create_registry, load_library};
 use imp_typecheck::check_graph;
 use std::collections::BTreeMap;
 
-fn scalar_constraint_library() -> TypeConstraintLibrary {
-    TypeConstraintLibrary {
-        id: "example.constraints".into(),
-        constraints: BTreeMap::from([(
-            "Scalar".into(),
-            TypeConstraint {
-                id: "Scalar".into(),
-                members: vec![
-                    concrete_type("string", vec![]),
-                    concrete_type("number", vec![]),
-                ],
-            },
-        )]),
+/// `Scalar = string | number`.
+fn scalar_type() -> TypeDefinition {
+    TypeDefinition {
+        id: "Scalar".into(),
+        params: vec![],
+        ty: imp_core_types::union_of(vec![
+            concrete_type("string", vec![]),
+            concrete_type("number", vec![]),
+        ]),
     }
 }
 
 fn identity_library() -> NodeLibrary {
     NodeLibrary {
+        types: vec![scalar_type()],
         id: "example.identity".into(),
         definitions: vec![NodeType {
             id: "identity".into(),
             name: None,
             type_params: vec![TypeParam {
                 id: "T".into(),
-                bounds: vec!["Scalar".into()],
+                bounds: vec![concrete_type("Scalar", vec![])],
             }],
             body: None,
             bindings: None,
@@ -60,13 +57,9 @@ fn identity_library() -> NodeLibrary {
 }
 
 fn registry_with_bounds() -> imp_registry::Registry {
-    load_type_constraint_library(
-        load_library(
-            load_library(create_registry(), core_node_library()).unwrap(),
-            identity_library(),
-        )
-        .unwrap(),
-        scalar_constraint_library(),
+    load_library(
+        load_library(create_registry(), core_node_library()).unwrap(),
+        identity_library(),
     )
     .unwrap()
 }
@@ -162,7 +155,7 @@ fn check_graph_rejects_type_arg_that_violates_bound() {
     assert!(
         errors
             .iter()
-            .any(|e| e.message.contains("does not satisfy bound \"Scalar\""))
+            .any(|e| e.message.contains("does not satisfy bound string | number"))
     );
 }
 
@@ -212,15 +205,16 @@ fn check_graph_any_satisfies_bound() {
 }
 
 #[test]
-fn check_graph_reports_unknown_bound_id() {
+fn check_graph_rejects_args_for_an_undefined_bound_name() {
     let bad_library = NodeLibrary {
+        types: Vec::new(),
         id: "example.bad".into(),
         definitions: vec![NodeType {
             id: "bad".into(),
             name: None,
             type_params: vec![TypeParam {
                 id: "T".into(),
-                bounds: vec!["Missing".into()],
+                bounds: vec![concrete_type("Missing", vec![])],
             }],
             body: None,
             bindings: None,
@@ -295,34 +289,25 @@ fn check_graph_reports_unknown_bound_id() {
     assert!(
         errors
             .iter()
-            .any(|e| e.message.contains("unknown type constraint \"Missing\""))
+            .any(|e| e.message.contains("does not satisfy bound Missing"))
     );
 }
 
 #[test]
-fn check_graph_matches_parametric_member_patterns() {
-    let collection_constraint_library = TypeConstraintLibrary {
-        id: "example.collection-constraints".into(),
-        constraints: BTreeMap::from([(
-            "StringCollection".into(),
-            TypeConstraint {
-                id: "StringCollection".into(),
-                members: vec![concrete_type(
-                    "collection",
-                    vec![concrete_type("string", vec![])],
-                )],
-            },
-        )]),
-    };
-
+fn check_graph_matches_parametric_bound_types() {
     let passthrough_library = NodeLibrary {
+        types: vec![TypeDefinition {
+            id: "StringCollection".into(),
+            params: vec![],
+            ty: concrete_type("collection", vec![concrete_type("string", vec![])]),
+        }],
         id: "example.passthrough".into(),
         definitions: vec![NodeType {
             id: "passthrough".into(),
             name: None,
             type_params: vec![TypeParam {
                 id: "T".into(),
-                bounds: vec!["StringCollection".into()],
+                bounds: vec![concrete_type("StringCollection", vec![])],
             }],
             body: None,
             bindings: None,
@@ -348,13 +333,9 @@ fn check_graph_matches_parametric_member_patterns() {
         }],
     };
 
-    let registry = load_type_constraint_library(
-        load_library(
-            load_library(create_registry(), core_node_library()).unwrap(),
-            passthrough_library,
-        )
-        .unwrap(),
-        collection_constraint_library,
+    let registry = load_library(
+        load_library(create_registry(), core_node_library()).unwrap(),
+        passthrough_library,
     )
     .unwrap();
 

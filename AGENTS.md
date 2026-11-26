@@ -7,8 +7,9 @@
 | Rust crate | imp-ts package | Role |
 | --- | --- | --- |
 | `crates/imp_core_types/` | `imp-core-types` | Core graph + library types; core boundary `NodeLibrary` |
-| `crates/imp_registry/` | `imp-registry` | Load `NodeLibrary` values and look up `NodeType`s |
-| `crates/imp_typecheck/` | `imp-typecheck` | Static type checking |
+| `crates/imp_registry/` | `imp-registry` | Load `NodeLibrary` values and Imp files; look up node and type definitions |
+| `crates/imp_file/` | `imp-file` | Parse, validate and serialize Imp files |
+| `crates/imp_typecheck/` | `imp-typecheck` | Static type checking: type definitions, unions, generics |
 | `crates/imp_graph_resolve/` | `imp-graph-resolve` | Late nested graph resolution |
 | `crates/imp_collection_transforms/` | `imp-collection-transforms` | Collection combinator `NodeLibrary` |
 | `crates/imp_pathing/` | `imp-pathing` | GQL-like path operator `NodeLibrary` |
@@ -39,7 +40,8 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | --- | --- |
 | Core graph model | [graph-model](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md) |
 | Node type libraries | [node-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md) |
-| Graph libraries | [graph-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-libraries.md) |
+| Imp files (JSON: types, definitions, nodes, edges) | [imp-files](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-file/imp-files.md) |
+| Type definitions and union types | [type-definitions](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/type-definitions.md) |
 | Graph resolution | [resolve](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) |
 | Static type checking | [type-system](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-typecheck/type-system.md) |
 | Registry | [registry](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md) |

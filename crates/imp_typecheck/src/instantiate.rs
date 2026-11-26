@@ -2,7 +2,7 @@
 
 use imp_core_types::{Graph, NodeDefinition, Port, Ports, Type};
 
-use crate::substitution::assert_concrete_args;
+use crate::substitution::{assert_concrete_args, canonical_union};
 
 fn substitute_in_type(
     ty: &Type,
@@ -17,16 +17,19 @@ fn substitute_in_type(
                 .ok_or_else(|| format!("unknown type parameter \"{param}\""))?;
             Ok(args[index].clone())
         }
-        Type::Concrete { id, args: type_args } if !type_args.is_empty() => Ok(
-            Type::Concrete {
-                id: id.clone(),
-                args: type_args
-                    .iter()
-                    .map(|arg| substitute_in_type(arg, params, args))
-                    .collect::<Result<Vec<_>, _>>()?,
-            },
-        ),
-        other => Ok(other.clone()),
+        Type::Concrete { id, args: type_args } => Ok(Type::Concrete {
+            id: id.clone(),
+            args: type_args
+                .iter()
+                .map(|arg| substitute_in_type(arg, params, args))
+                .collect::<Result<Vec<_>, _>>()?,
+        }),
+        Type::Union { union } => Ok(canonical_union(
+            union
+                .iter()
+                .map(|member| substitute_in_type(member, params, args))
+                .collect::<Result<Vec<_>, _>>()?,
+        )),
     }
 }
 

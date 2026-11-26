@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "imp_graph_library"
+name = "imp_file"
 version = "0.6.0"
 dependencies = [
  "imp_core_types",
@@ -65,6 +65,7 @@ name = "imp_registry"
 version = "0.6.0"
 dependencies = [
  "imp_core_types",
+ "serde_json",
  "thiserror",
 ]
 

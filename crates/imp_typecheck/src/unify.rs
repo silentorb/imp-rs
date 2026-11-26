@@ -3,6 +3,7 @@
 use imp_core_types::Type;
 use thiserror::Error;
 
+use crate::assignable::assignable;
 use crate::substitution::{
     any_signal, apply_substitution, bind_all_type_vars, contains_type_var, is_any_type,
     rigid_parts, Substitution,
@@ -54,6 +55,17 @@ pub fn unify(
         }
         (Type::Var { param }, other) => unify_var(param, other, subst),
         (other, Type::Var { param }) => unify_var(param, other, subst),
+        // Two unions are equal when each is assignable to the other (member order does not matter).
+        (Type::Union { .. }, Type::Union { .. }) => {
+            let cannot = || UnifyError {
+                message: format!("cannot unify {} with {}", format_type(&a), format_type(&b)),
+            };
+            let forward = assignable(&a, &b, subst).map_err(|_| cannot())?;
+            assignable(&b, &a, &forward).map_err(|_| cannot())
+        }
+        (Type::Union { .. }, _) | (_, Type::Union { .. }) => Err(UnifyError {
+            message: format!("cannot unify {} with {}", format_type(&a), format_type(&b)),
+        }),
         (
             Type::Concrete {
                 id: left_id,
@@ -119,6 +131,14 @@ fn unify_var(
     Ok(next)
 }
 
+/// Union members inside type arguments are parenthesized: `list<(a | b)>`.
+fn format_arg(ty: &Type) -> String {
+    match ty {
+        Type::Union { .. } => format!("({})", format_type(ty)),
+        other => format_type(other),
+    }
+}
+
 pub fn format_type(ty: &Type) -> String {
     if let Some((param, _)) = rigid_parts(ty) {
         return param.to_string();
@@ -126,10 +146,11 @@ pub fn format_type(ty: &Type) -> String {
     match ty {
         Type::Var { param } => param.clone(),
         Type::Concrete { id, args } if args.is_empty() => id.clone(),
+        Type::Union { union } => union.iter().map(format_type).collect::<Vec<_>>().join(" | "),
         Type::Concrete { id, args } => {
             let rendered = args
                 .iter()
-                .map(format_type)
+                .map(format_arg)
                 .collect::<Vec<_>>()
                 .join(", ");
             format!("{id}<{rendered}>")

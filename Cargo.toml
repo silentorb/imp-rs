@@ -4,7 +4,7 @@ members = [
     "crates/imp_core_types",
     "crates/imp_registry",
     "crates/imp_typecheck",
-    "crates/imp_graph_library",
+    "crates/imp_file",
     "crates/imp_graph_resolve",
     "crates/imp_collection_transforms",
     "crates/imp_pathing",
@@ -20,7 +20,7 @@ license = "MIT"
 imp_core_types = { path = "crates/imp_core_types" }
 imp_registry = { path = "crates/imp_registry" }
 imp_typecheck = { path = "crates/imp_typecheck" }
-imp_graph_library = { path = "crates/imp_graph_library" }
+imp_file = { path = "crates/imp_file" }
 imp_graph_resolve = { path = "crates/imp_graph_resolve" }
 imp_collection_transforms = { path = "crates/imp_collection_transforms" }
 imp_pathing = { path = "crates/imp_pathing" }

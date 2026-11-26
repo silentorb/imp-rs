@@ -11,8 +11,8 @@ pub type TypeId = String;
 
 mod types;
 pub use types::{
-    collection_of, concrete_type, is_concrete, is_type_var, list_of, set_of, type_param, type_var,
-    Type, TypeParam, TypeParamId,
+    collection_of, concrete_type, is_concrete, is_type_var, is_union, list_of, set_of, type_param,
+    type_var, union_of, Type, TypeParam, TypeParamId,
 };
 
 /// Literal value for instance inputs or port defaults.
@@ -88,13 +88,14 @@ pub struct Graph {
 
 mod library;
 pub use library::{
-    is_graph_backed_definition, BoundaryBindings, GraphLibrary, NodeDefinition, NodeLibrary, NodeType,
+    is_graph_backed_definition, BoundaryBindings, NodeDefinition, NodeLibrary, NodeType,
 };
 
-mod type_constraint;
-pub use type_constraint::{
-    TypeConstraint, TypeConstraintId, TypeConstraintLibrary,
-};
+mod type_definition;
+pub use type_definition::TypeDefinition;
+
+mod imp_file;
+pub use imp_file::{imp_file_graph_source, ImpFile, ImpFileEdge, ImpFileSection, IMP_FILE_FORMAT};
 
 mod implementation;
 pub use implementation::{

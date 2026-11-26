@@ -1,10 +1,10 @@
 //! Graph-backed definition validation tests.
 
 use imp_core_types::{
-    concrete_type, core_node_library, list_of, BoundaryBindings, Graph, GraphLibrary, Node,
+    concrete_type, core_node_library, list_of, BoundaryBindings, Graph, ImpFile, Node,
     NodeDefinition, Port, PortReference,
 };
-use imp_registry::{create_registry, load_graph_library, load_node_library};
+use imp_registry::{create_registry, load_imp_file, load_node_library};
 use imp_typecheck::{check_definition, check_graph_definitions};
 
 fn passthrough_definition() -> NodeDefinition {
@@ -86,11 +86,12 @@ fn passthrough_definition() -> NodeDefinition {
 
 #[test]
 fn check_definition_validates_graph_backed_library_entry() {
-    let registry = load_graph_library(
+    let registry = load_imp_file(
         load_node_library(create_registry(), core_node_library()).unwrap(),
-        GraphLibrary {
-            id: "example.graphs".into(),
+        ImpFile {
+            id: Some("example.graphs".into()),
             definitions: vec![passthrough_definition()],
+            ..ImpFile::default()
         },
     )
     .unwrap();
@@ -127,11 +128,12 @@ fn check_graph_definitions_reports_definition_cycle() {
         },
     );
 
-    let registry = load_graph_library(
+    let registry = load_imp_file(
         load_node_library(create_registry(), core_node_library()).unwrap(),
-        GraphLibrary {
-            id: "cycle.lib".into(),
+        ImpFile {
+            id: Some("cycle.lib".into()),
             definitions: vec![a, b],
+            ..ImpFile::default()
         },
     )
     .unwrap();

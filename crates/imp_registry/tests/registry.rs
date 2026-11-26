@@ -6,12 +6,13 @@ use imp_core_types::{
 };
 use imp_registry::{
     create_registry, get_node_definition, get_node_definitions, list_libraries,
-    list_node_definitions, load_node_library, DuplicateNodeTypeError,
+    list_node_definitions, load_node_library, DuplicateNodeTypeError, RegistryError,
 };
 use std::collections::BTreeMap;
 
 fn source_library() -> NodeLibrary {
     NodeLibrary {
+        types: Vec::new(),
         id: "example.source".into(),
         definitions: vec![NodeDefinition {
             id: "source".into(),
@@ -36,6 +37,7 @@ fn source_library() -> NodeLibrary {
 
 fn sink_library() -> NodeLibrary {
     NodeLibrary {
+        types: Vec::new(),
         id: "example.sink".into(),
         definitions: vec![NodeDefinition {
             id: "sink".into(),
@@ -60,6 +62,7 @@ fn sink_library() -> NodeLibrary {
 
 fn conflicting_library() -> NodeLibrary {
     NodeLibrary {
+        types: Vec::new(),
         id: "example.conflict".into(),
         definitions: vec![NodeDefinition {
             id: "source".into(),
@@ -110,10 +113,10 @@ fn load_node_library_returns_error_on_equivalent_overload() {
     let err = load_node_library(registry, conflicting_library()).unwrap_err();
     assert_eq!(
         err,
-        DuplicateNodeTypeError {
+        RegistryError::DuplicateNodeType(DuplicateNodeTypeError {
             type_id: "source".into(),
             library_id: "example.conflict".into(),
-        }
+        })
     );
     assert!(err
         .to_string()
@@ -123,6 +126,7 @@ fn load_node_library_returns_error_on_equivalent_overload() {
 #[test]
 fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
     let list_filter = NodeLibrary {
+        types: Vec::new(),
         id: "example.filter-list".into(),
         definitions: vec![NodeDefinition {
             id: "filter".into(),
@@ -152,6 +156,7 @@ fn load_node_library_accepts_distinct_overloads_for_same_node_type_id() {
         }],
     };
     let set_filter = NodeLibrary {
+        types: Vec::new(),
         id: "example.filter-set".into(),
         definitions: vec![NodeDefinition {
             id: "filter".into(),
@@ -210,4 +215,26 @@ fn loads_core_node_library() {
             .id,
         "value"
     );
+}
+
+#[test]
+fn load_imp_file_registers_types_and_primitive_definitions_not_topology() {
+    let file: imp_core_types::ImpFile = serde_json::from_value(serde_json::json!({
+        "format": "imp",
+        "id": "example.audio",
+        "types": [{ "id": "Audio", "type": { "union": [{ "id": "audio_mono" }, { "id": "audio_stereo" }] } }],
+        "definitions": [{ "id": "sine", "inputs": {}, "outputs": {} }],
+        "nodes": [{ "id": "n", "type": "sine", "inputs": {} }]
+    }))
+    .unwrap();
+    let registry = imp_registry::load_imp_file(create_registry(), file.clone()).unwrap();
+    assert!(imp_registry::get_type_definition(&registry, "Audio").is_some());
+    assert_eq!(get_node_definition(&registry, "sine").unwrap().id, "sine");
+    assert!(get_node_definition(&registry, "n").is_none());
+    assert_eq!(imp_registry::list_imp_files(&registry).len(), 1);
+
+    let err = imp_registry::load_imp_file(registry, file).unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("TypeId \"Audio\" is already defined (loading library \"example.audio\")"));
 }

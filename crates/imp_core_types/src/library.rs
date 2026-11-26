@@ -1,7 +1,7 @@
 //! Node definition libraries. Spec: imp-spec/docs/packages/imp-core-types/node-libraries.md
 
 use crate::implementation::NodeImplementation;
-use crate::{Graph, NodeId, NodeTypeId, Ports, TypeParam};
+use crate::{Graph, NodeId, NodeTypeId, Ports, TypeDefinition, TypeParam};
 use serde::{Deserialize, Serialize};
 
 /// Maps declared external ports to boundary nodes in a graph-backed body.
@@ -31,20 +31,14 @@ pub struct NodeDefinition {
     pub bindings: Option<BoundaryBindings>,
 }
 
-/// Named declarative collection of `NodeDefinition`s.
+/// Named declarative collection of `NodeDefinition`s, plus the type definitions they rely on.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeLibrary {
     pub id: String,
     pub definitions: Vec<NodeDefinition>,
-}
-
-/// JSON-serializable catalog of graph-backed definitions.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GraphLibrary {
-    pub id: String,
-    pub definitions: Vec<NodeDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub types: Vec<TypeDefinition>,
 }
 
 pub fn is_graph_backed_definition(def: &NodeDefinition) -> bool {

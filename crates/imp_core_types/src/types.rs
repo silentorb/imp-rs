@@ -9,11 +9,13 @@ pub type TypeParamId = String;
 #[serde(rename_all = "camelCase")]
 pub struct TypeParam {
     pub id: TypeParamId,
+    /// A type argument must be assignable to every bound (typically a named union).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub bounds: Vec<String>,
+    pub bounds: Vec<Type>,
 }
 
-/// Imp type — concrete nominal type or type-variable reference.
+/// Imp type — concrete nominal type (or a reference to a type definition), type-variable
+/// reference, or union.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Type {
@@ -25,6 +27,35 @@ pub enum Type {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         args: Vec<Type>,
     },
+    /// A value of exactly one of the member types (no runtime tag says which).
+    Union {
+        union: Vec<Type>,
+    },
+}
+
+impl Type {
+    /// Direct child types (concrete args or union members).
+    pub fn children(&self) -> &[Type] {
+        match self {
+            Type::Var { .. } => &[],
+            Type::Concrete { args, .. } => args,
+            Type::Union { union } => union,
+        }
+    }
+
+    /// Rebuilds the type with each direct child replaced by `map(child)`.
+    pub fn map_children(&self, map: impl FnMut(&Type) -> Type) -> Type {
+        match self {
+            Type::Var { .. } => self.clone(),
+            Type::Concrete { id, args } => Type::Concrete {
+                id: id.clone(),
+                args: args.iter().map(map).collect(),
+            },
+            Type::Union { union } => Type::Union {
+                union: union.iter().map(map).collect(),
+            },
+        }
+    }
 }
 
 pub fn type_param(id: impl Into<String>) -> TypeParam {
@@ -42,12 +73,14 @@ pub fn is_type_var(ty: &Type) -> bool {
     matches!(ty, Type::Var { .. })
 }
 
+pub fn is_union(ty: &Type) -> bool {
+    matches!(ty, Type::Union { .. })
+}
+
 pub fn concrete_type(id: impl Into<String>, args: Vec<Type>) -> Type {
-    let id = id.into();
-    if args.is_empty() {
-        Type::Concrete { id, args: vec![] }
-    } else {
-        Type::Concrete { id, args }
+    Type::Concrete {
+        id: id.into(),
+        args,
     }
 }
 
@@ -55,6 +88,10 @@ pub fn type_var(param: impl Into<String>) -> Type {
     Type::Var {
         param: param.into(),
     }
+}
+
+pub fn union_of(members: Vec<Type>) -> Type {
+    Type::Union { union: members }
 }
 
 pub fn collection_of(element: Type) -> Type {

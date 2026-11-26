@@ -1,13 +1,12 @@
 //! Flattening generic graph-backed definitions used without explicit type args.
 
 use imp_core_types::{
-    concrete_type, core_node_library, type_var, BoundaryBindings, Edge, Graph, GraphLibrary, Node,
-    NodeDefinition, NodeLibrary, Port, PortReference, Type, TypeConstraint,
-    TypeConstraintLibrary, TypeParam,
+    concrete_type, core_node_library, type_var, BoundaryBindings, Edge, Graph, ImpFile, Node,
+    NodeDefinition, NodeLibrary, Port, PortReference, Type, TypeDefinition, TypeParam,
 };
 use imp_graph_resolve::flatten_graph;
 use imp_registry::{
-    create_registry, load_graph_library, load_library, load_type_constraint_library, Registry,
+    create_registry, load_imp_file, load_library, Registry,
 };
 use imp_typecheck::{check_definition, check_graph, resolve_type_args};
 use std::collections::BTreeMap;
@@ -40,7 +39,7 @@ fn definition(
         type_params: if generic {
             vec![TypeParam {
                 id: "A".into(),
-                bounds: vec!["Scalar".into()],
+                bounds: vec![concrete_type("Scalar", vec![])],
             }]
         } else {
             vec![]
@@ -87,6 +86,7 @@ fn edge(id: &str, from: (&str, &str), to: (&str, &str)) -> (String, Edge) {
 fn registry() -> (Registry, NodeDefinition) {
     let a = type_var("A");
     let primitives = NodeLibrary {
+        types: Vec::new(),
         id: "example.primitives".into(),
         definitions: vec![
             definition("number_source", false, vec![], vec![port("value", number())]),
@@ -123,24 +123,23 @@ fn registry() -> (Registry, NodeDefinition) {
         inputs: BTreeMap::from([("value".into(), "in".into())]),
         outputs: BTreeMap::from([("value".into(), "out".into())]),
     });
-    let constraints = TypeConstraintLibrary {
-        id: "example.constraints".into(),
-        constraints: BTreeMap::from([(
-            "Scalar".into(),
-            TypeConstraint {
-                id: "Scalar".into(),
-                members: vec![number(), concrete_type("string", vec![])],
-            },
-        )]),
+    let scalar = TypeDefinition {
+        id: "Scalar".into(),
+        params: vec![],
+        ty: imp_core_types::union_of(vec![number(), concrete_type("string", vec![])]),
     };
     let registry = load_library(create_registry(), core_node_library()).expect("core");
-    let registry = load_type_constraint_library(registry, constraints).expect("constraints");
+    let primitives = NodeLibrary {
+        types: vec![scalar],
+        ..primitives
+    };
     let registry = load_library(registry, primitives).expect("primitives");
-    let registry = load_graph_library(
+    let registry = load_imp_file(
         registry,
-        GraphLibrary {
-            id: "example.graphs".into(),
+        ImpFile {
+            id: Some("example.graphs".into()),
             definitions: vec![twice.clone()],
+            ..ImpFile::default()
         },
     )
     .expect("graphs");

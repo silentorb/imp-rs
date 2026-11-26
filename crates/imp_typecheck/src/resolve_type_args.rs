@@ -4,6 +4,7 @@ use imp_core_types::{GraphSource, NodeId, Type};
 use imp_registry::{get_node_definitions, Registry};
 
 use crate::graph_analysis::{resolve_selections, SelectedDefinitions};
+use crate::normalize::with_prepared;
 use crate::substitution::{apply_substitution, contains_type_var, scoped_param};
 
 pub fn resolve_type_args<'a>(
@@ -12,7 +13,17 @@ pub fn resolve_type_args<'a>(
     registry: &Registry,
     selected: Option<&SelectedDefinitions>,
 ) -> Option<Vec<Type>> {
-    let source: GraphSource<'a> = graph.into();
+    with_prepared(graph.into(), registry, |source, registry| {
+        resolve_prepared(source, node_id, registry, selected)
+    })
+}
+
+fn resolve_prepared(
+    source: GraphSource<'_>,
+    node_id: &NodeId,
+    registry: &Registry,
+    selected: Option<&SelectedDefinitions>,
+) -> Option<Vec<Type>> {
     let node = source.nodes.get_node(node_id)?;
     let overloads = get_node_definitions(registry, &node.node_type);
     let owned;
