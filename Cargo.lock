@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "imp_collection_transforms"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_core_types",
  "imp_registry",
@@ -12,7 +12,7 @@ dependencies = [
 
 [[package]]
 name = "imp_core_types"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -20,7 +20,7 @@ dependencies = [
 
 [[package]]
 name = "imp_execution"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_collection_transforms",
  "imp_core_types",
@@ -33,7 +33,7 @@ dependencies = [
 
 [[package]]
 name = "imp_file"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_core_types",
  "serde",
@@ -43,7 +43,7 @@ dependencies = [
 
 [[package]]
 name = "imp_graph_resolve"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_collection_transforms",
  "imp_core_types",
@@ -54,7 +54,7 @@ dependencies = [
 
 [[package]]
 name = "imp_pathing"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_core_types",
  "imp_registry",
@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "imp_registry"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_core_types",
  "serde_json",
@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "imp_typecheck"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "imp_collection_transforms",
  "imp_core_types",
